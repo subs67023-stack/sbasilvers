@@ -8,7 +8,7 @@ export const generateGSTBillPDF = async (bill) => {
         // alert("PDF Generation v15 (Adding Totals & Debugging)"); // Removed alert to be less annoying
         console.log("Initializing PDF Generation v16 (Philosopher Font)");
 
-        const existingPdfBytes = await fetch('/SBA.pdf').then(res => res.arrayBuffer());
+        const existingPdfBytes = await fetch('/SBAGST.pdf').then(res => res.arrayBuffer());
         // Retrieve the font form the public directory
         const fontBytes = await fetch('/fonts/Philosopher-Regular.ttf').then(res => res.arrayBuffer());
 
