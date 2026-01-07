@@ -159,7 +159,7 @@ export const generateGSTBillPDF = async (bill) => {
 
 
         // 4. Footer
-        const footerOffset = 600;
+        const footerOffset = 595;
 
         const taxX = 530;
         if (parseFloat(bill.sgstAmount) > 0) drawText(parseFloat(bill.sgstAmount).toFixed(2), taxX - 35, footerOffset + 5, 10);
@@ -178,7 +178,7 @@ export const generateGSTBillPDF = async (bill) => {
 
         // --- TOTALS ROW (New) ---
         // Placing Total Quantity and Total Amount in the "Total" row below items
-        const totalRowOffset = 575; // Estimated Y for the Total row
+        const totalRowOffset = 580; // Estimated Y for the Total row
         drawText(parseFloat(bill.totalQuantity || 0).toFixed(3), xQty, totalRowOffset, 9, philosopherFont); // Was Bold
         drawText(parseFloat(bill.totalAmount || 0).toFixed(2), xAmt, totalRowOffset, 9, philosopherFont); // Was Bold
 
