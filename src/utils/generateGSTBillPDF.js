@@ -173,7 +173,7 @@ export const generateGSTBillPDF = async (bill) => {
         if (bill.paymentDate) {
             paymentText += ``;
         }
-        drawText(paymentText, 127, footerOffset + 53, 9);
+        drawText(paymentText, 128, footerOffset + 55, 9);
         //drawText(formatDate(bill.paymentDate), 219, footerOffset + 53, 9);
 
         // --- TOTALS ROW (New) ---
