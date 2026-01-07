@@ -88,15 +88,15 @@ export const generateGSTBillPDF = async (bill) => {
         const headerTopOffset = 229;
 
         // Invoice Date (User Preference: 125)
-        drawText(formatDate(bill.date), 115, headerTopOffset + 1, 10);
+        drawText(formatDate(bill.date), 115, headerTopOffset - 1, 10);
 
         // Invoice No (User Preference: 450)
-        drawText(bill.billNumber, 450, headerTopOffset + 1, 11, philosopherFont); // Was Bold
+        drawText(bill.billNumber, 440, headerTopOffset - 1, 11, philosopherFont); // Was Bold
 
         // 2. Receiver / Transport Boxes
-        const boxTopOffset = headerTopOffset + 18;
+        const boxTopOffset = headerTopOffset + 15;
         const leftBoxX = 123;
-        const rightBoxX = 420;
+        const rightBoxX = 423;
 
         // REFINED SPACING: Reduced to 12 to match template lines
         const lineSpacing = 11;
@@ -137,9 +137,9 @@ export const generateGSTBillPDF = async (bill) => {
         let currentYOffset = 360;
         const rowHeight = 22;
 
-        const xSr = 50;
-        const xDesc = 65;
-        const xHsn = 315;
+        const xSr = 55;
+        const xDesc = 75;
+        const xHsn = 305;
         const xQty = 350;
         const xRate = 400;
         const xPer = 450;
@@ -159,7 +159,7 @@ export const generateGSTBillPDF = async (bill) => {
 
 
         // 4. Footer
-        const footerOffset = 610;
+        const footerOffset = 590;
 
         const taxX = 530;
         if (parseFloat(bill.sgstAmount) > 0) drawText(parseFloat(bill.sgstAmount).toFixed(2), taxX - 35, footerOffset + 5, 10);
@@ -184,7 +184,7 @@ export const generateGSTBillPDF = async (bill) => {
 
         // Words
         const words = `${bill.amountInWords || numberToWords(bill.grandTotal)}`;
-        drawText(words, 165, footerOffset + 80, 9, philosopherFont); // Was Bold
+        drawText(words, 195, footerOffset + 80, 9, philosopherFont); // Was Bold
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
