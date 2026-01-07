@@ -105,39 +105,39 @@ export const generateGSTBillPDF = async (bill) => {
         const cleanAddress = (bill.customer?.address || '').replace(/\n/g, ', ').substring(0, 45);
 
         // Line 0: Name
-        drawText(bill.customer?.name, leftBoxX, boxTopOffset, 9, philosopherFont); // Was Bold
+        drawText(bill.customer?.name, leftBoxX, boxTopOffset, 8, philosopherFont); // Was Bold
         // Line 1: Address
-        drawText(cleanAddress, leftBoxX, boxTopOffset + lineSpacing, 9);
+        drawText(cleanAddress, leftBoxX, boxTopOffset + lineSpacing, 8);
         // Line 2: PAN
-        drawText(bill.customer?.panNumber || '', leftBoxX, boxTopOffset + (lineSpacing * 2), 9);
+        drawText(bill.customer?.panNumber || '', leftBoxX, boxTopOffset + (lineSpacing * 2),8);
         // Line 3: GSTIN
-        drawText(bill.customer?.gstNumber || 'N/A', leftBoxX, boxTopOffset + (lineSpacing * 3), 9);
+        drawText(bill.customer?.gstNumber || 'N/A', leftBoxX, boxTopOffset + (lineSpacing * 3), 8);
         // Line 4: Email
-        drawText(bill.customer?.email || '', leftBoxX, boxTopOffset + (lineSpacing * 4), 9);
+        drawText(bill.customer?.email || '', leftBoxX, boxTopOffset + (lineSpacing * 4), 8);
         // Line 5: Phone
-        drawText(bill.customer?.phone || '', leftBoxX, boxTopOffset + (lineSpacing * 5), 9);
+        drawText(bill.customer?.phone || '', leftBoxX, boxTopOffset + (lineSpacing * 5), 8);
 
         // Line 6: State & Code 
         const stateOffset = boxTopOffset - 2 + (lineSpacing * 6);
-        drawText(bill.state, 123, stateOffset + 2, 9); // Check visual if 100 X is correct for label
+        drawText(bill.state, 123, stateOffset , 9); // Check visual if 100 X is correct for label
         drawText(bill.stateCode, 270, stateOffset, 9);
 
         // RIGHT BOX (Transport)
         // Line 1: Dispatched
-        drawText(bill.dispatchedThrough || '', rightBoxX, boxTopOffset + 12 + lineSpacing, 9);
+        drawText(bill.dispatchedThrough || '', rightBoxX, boxTopOffset + 14 + lineSpacing, 9);
         // Line 2: Destination
-        drawText(bill.destination || '', rightBoxX, boxTopOffset + 12 + (lineSpacing * 2), 9);
+        drawText(bill.destination || '', rightBoxX, boxTopOffset + 14 + (lineSpacing * 2), 9);
         // Line 3: Place of Supply
-        drawText(bill.placeOfSupply || '', rightBoxX, boxTopOffset + 12 + (lineSpacing * 3), 9);
+        drawText(bill.placeOfSupply || '', rightBoxX, boxTopOffset + 14 + (lineSpacing * 3), 9);
         // Line 4: Pin Code
-        drawText(bill.pinCode || '', rightBoxX, boxTopOffset + 12 + (lineSpacing * 4), 9);
+        drawText(bill.pinCode || '', rightBoxX, boxTopOffset + 14 + (lineSpacing * 4), 9);
 
 
         // 3. Items Table
         let currentYOffset = 360;
         const rowHeight = 22;
 
-        const xSr = 55;
+        const xSr = 60;
         const xDesc = 75;
         const xHsn = 305;
         const xQty = 350;
@@ -159,7 +159,7 @@ export const generateGSTBillPDF = async (bill) => {
 
 
         // 4. Footer
-        const footerOffset = 590;
+        const footerOffset = 600;
 
         const taxX = 530;
         if (parseFloat(bill.sgstAmount) > 0) drawText(parseFloat(bill.sgstAmount).toFixed(2), taxX - 35, footerOffset + 5, 10);
@@ -178,7 +178,7 @@ export const generateGSTBillPDF = async (bill) => {
 
         // --- TOTALS ROW (New) ---
         // Placing Total Quantity and Total Amount in the "Total" row below items
-        const totalRowOffset = 595; // Estimated Y for the Total row
+        const totalRowOffset = 575; // Estimated Y for the Total row
         drawText(parseFloat(bill.totalQuantity || 0).toFixed(3), xQty, totalRowOffset, 9, philosopherFont); // Was Bold
         drawText(parseFloat(bill.totalAmount || 0).toFixed(2), xAmt, totalRowOffset, 9, philosopherFont); // Was Bold
 
