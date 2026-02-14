@@ -23,6 +23,11 @@ const WholesaleDashboard = ({ children }) => {
       icon: '🧾'
     },
     {
+      name: 'Product Billing',
+      path: '/wholesale/product-billing',
+      icon: '🛍️'
+    },
+    {
 
       name: 'Jama/Kharch (Silver)',
       path: '/wholesale/jama-kharch-silver',
@@ -71,8 +76,8 @@ const WholesaleDashboard = ({ children }) => {
                 key={item.path}
                 to={item.path}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${location.pathname === item.path
-                    ? 'bg-blue-700 text-white shadow-lg'
-                    : 'hover:bg-blue-700/50'
+                  ? 'bg-blue-700 text-white shadow-lg'
+                  : 'hover:bg-blue-700/50'
                   }`}
               >
                 <span className="text-2xl">{item.icon}</span>

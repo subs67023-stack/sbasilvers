@@ -25,6 +25,7 @@ import WholesaleBilling from './pages/wholesale/WholesaleBilling';
 import JamaKharchSilver from './pages/wholesale/JamaKharchSilver';
 import JamaKharchCash from './pages/wholesale/JamaKharchCash';
 import WholesaleBullen from './pages/wholesale/WholesaleBullen';
+import ProductBilling from './pages/wholesale/ProductBilling'; // NEW
 import GSTBilling from './pages/wholesale/GSTBilling'; // NEW
 
 
@@ -145,6 +146,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <GSTBilling />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wholesale/product-billing"
+            element={
+              <ProtectedRoute adminOnly>
+                <ProductBilling />
               </ProtectedRoute>
             }
           />

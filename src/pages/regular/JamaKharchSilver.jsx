@@ -49,7 +49,7 @@ const JamaKharchSilver = () => {
   useEffect(() => {
     const grossWeight = parseFloat(rawFormData.grossWeight) || 0;
     const touch = parseFloat(rawFormData.touch) || 0;
-    
+
     if (grossWeight > 0 && touch > 0) {
       const totalSilver = (grossWeight * touch) / 100;
       setRawFormData(prev => ({
@@ -68,6 +68,24 @@ const JamaKharchSilver = () => {
       console.error('Error fetching transactions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await api.get('/regular-jama-kharch/silver/pdf', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'regular-silver-report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF');
     }
   };
 
@@ -162,21 +180,19 @@ const JamaKharchSilver = () => {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setActiveTab('JAMA')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'JAMA'
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${activeTab === 'JAMA'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             JAMA
           </button>
           <button
             onClick={() => setActiveTab('KHARCHA')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'KHARCHA'
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${activeTab === 'KHARCHA'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             KHARCHA
           </button>
@@ -336,12 +352,20 @@ const JamaKharchSilver = () => {
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button
-            onClick={exportToExcel}
-            className="ml-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          >
-            📊 Export to Excel
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownloadPDF}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              📄 PDF Report
+            </button>
+            <button
+              onClick={exportToExcel}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              📊 Export to Excel
+            </button>
+          </div>
         </div>
 
         {/* Transaction History */}
@@ -374,9 +398,8 @@ const JamaKharchSilver = () => {
                       <tr key={txn.id} className="hover:bg-gray-50">
                         <td className="border p-2">{new Date(txn.date).toLocaleDateString()}</td>
                         <td className="border p-2">
-                          <span className={`px-2 py-1 rounded text-sm ${
-                            txn.silverType === 'raw' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
+                          <span className={`px-2 py-1 rounded text-sm ${txn.silverType === 'raw' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'
+                            }`}>
                             {txn.silverType === 'raw' ? 'Raw' : 'Fine'}
                           </span>
                         </td>

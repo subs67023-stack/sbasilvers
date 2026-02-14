@@ -21,7 +21,7 @@ const JamaKharchCash = () => {
     fetchTransactions();
   }, [activeTab]);
 
-    useEffect(() => {
+  useEffect(() => {
     // Filter transactions based on search
     if (searchTerm) {
       const filtered = transactions.filter(txn =>
@@ -44,6 +44,24 @@ const JamaKharchCash = () => {
       console.error('Error fetching transactions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await api.get('/wholesale-jama-kharch/cash/pdf', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'wholesale-cash-report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF');
     }
   };
 
@@ -74,7 +92,7 @@ const JamaKharchCash = () => {
         ...formData,
         type: activeTab
       });
-      
+
       alert('Transaction saved successfully!');
       setFormData({
         date: new Date().toISOString().split('T')[0],
@@ -91,7 +109,7 @@ const JamaKharchCash = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this transaction?')) return;
-    
+
     try {
       await api.delete(`/wholesale-jama-kharch/cash/${id}`);
       alert('Transaction deleted successfully!');
@@ -111,21 +129,19 @@ const JamaKharchCash = () => {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setActiveTab('JAMA')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'JAMA'
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${activeTab === 'JAMA'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             JAMA
           </button>
           <button
             onClick={() => setActiveTab('KHARCHA')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'KHARCHA'
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${activeTab === 'KHARCHA'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             KHARCHA
           </button>
@@ -201,12 +217,20 @@ const JamaKharchCash = () => {
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button
-            onClick={exportToExcel}
-            className="ml-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          >
-            📊 Export to Excel
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownloadPDF}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              📄 PDF Report
+            </button>
+            <button
+              onClick={exportToExcel}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              📊 Export to Excel
+            </button>
+          </div>
         </div>
 
         {/* Transaction History */}
