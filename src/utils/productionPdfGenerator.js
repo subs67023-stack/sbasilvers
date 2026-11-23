@@ -74,7 +74,7 @@ export const generateProductionPDF = (saleData) => {
     parseFloat(item.touch).toFixed(2),
     item.pieces,
     parseFloat(item.laborChargePerKg).toFixed(0),
-    parseFloat(item.silver).toFixed(3),
+    Math.round(parseFloat(item.silver)).toString(),
     parseFloat(item.amount).toFixed(2)
   ]);
 
@@ -104,7 +104,7 @@ export const generateProductionPDF = (saleData) => {
     '',
     '',
     '',
-    { content: totals.silver.toFixed(3), styles: { fontStyle: 'bold' } },
+    { content: Math.round(totals.silver).toString(), styles: { fontStyle: 'bold' } },
     { content: totals.amount.toFixed(2), styles: { fontStyle: 'bold' } }
   ]);
 
@@ -180,22 +180,22 @@ export const generateProductionPDF = (saleData) => {
 
   // ========== TOTALS SECTION ==========
   
-  const totalPaidSilver = parseFloat(saleData.paidSilver) || 0;
+  const totalPaidSilver = Math.round(parseFloat(saleData.paidSilver) || 0);
   const totalPaidAmount = parseFloat(saleData.paidAmount) || 0;
-  const pendingSilver = parseFloat(saleData.totalSilver) - totalPaidSilver;
+  const pendingSilver = Math.round(parseFloat(saleData.totalSilver) - totalPaidSilver);
   const pendingAmount = parseFloat(saleData.totalLaborAmount) - totalPaidAmount;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.text('Total MR', margin, yPos);
-  doc.text(totalPaidSilver.toFixed(3), margin + 30, yPos, { align: 'right' });
-  doc.text((-totalPaidSilver).toFixed(3), margin + 60, yPos, { align: 'right' });
+  doc.text(totalPaidSilver.toString(), margin + 30, yPos, { align: 'right' });
+  doc.text((-totalPaidSilver).toString(), margin + 60, yPos, { align: 'right' });
   yPos += 6;
 
   // Previous balance (if exists)
   if (saleData.previousBalance) {
     doc.text('Last Bal', margin, yPos);
-    doc.text(parseFloat(saleData.previousBalance.silver || 0).toFixed(3), pageWidth - margin - 50, yPos, { align: 'right' });
+    doc.text(Math.round(parseFloat(saleData.previousBalance.silver || 0)).toString(), pageWidth - margin - 50, yPos, { align: 'right' });
     doc.text(parseFloat(saleData.previousBalance.amount || 0).toFixed(2), pageWidth - margin - 20, yPos, { align: 'right' });
     yPos += 6;
   }
@@ -211,7 +211,7 @@ export const generateProductionPDF = (saleData) => {
   
   doc.setFontSize(9);
   doc.text('Silver:', pageWidth - margin - 70, yPos + 12);
-  doc.text(pendingSilver.toFixed(3), pageWidth - margin - 50, yPos + 12, { align: 'right' });
+  doc.text(pendingSilver.toString(), pageWidth - margin - 50, yPos + 12, { align: 'right' });
   
   doc.text('Naam:', pageWidth - margin - 30, yPos + 12);
   doc.text(`₹${pendingAmount.toFixed(2)}`, pageWidth - margin - 5, yPos + 12, { align: 'right' });
@@ -273,7 +273,7 @@ export const generateCustomerLedgerPDF = (customerData) => {
   doc.setFillColor(255, 243, 205);
   doc.rect(margin, yPos, pageWidth - 2 * margin, 15, 'F');
   
-  doc.text(`Total Balance Silver: ${parseFloat(customerData.balanceSilver).toFixed(3)} gm`, margin + 5, yPos + 6);
+  doc.text(`Total Balance Silver: ${Math.round(parseFloat(customerData.balanceSilver))} gm`, margin + 5, yPos + 6);
   doc.text(`Total Balance Amount: ₹${parseFloat(customerData.balanceAmount).toFixed(2)}`, margin + 5, yPos + 12);
 
   yPos += 20;
@@ -283,9 +283,9 @@ export const generateCustomerLedgerPDF = (customerData) => {
     const tableData = customerData.sales.map(sale => [
       sale.voucherNo,
       new Date(sale.date).toLocaleDateString('en-IN'),
-      parseFloat(sale.totalSilver).toFixed(3),
+      Math.round(parseFloat(sale.totalSilver)).toString(),
       `₹${parseFloat(sale.totalLaborAmount).toFixed(2)}`,
-      parseFloat(sale.pendingSilver || 0).toFixed(3),
+      Math.round(parseFloat(sale.pendingSilver || 0)).toString(),
       `₹${parseFloat(sale.pendingAmount || 0).toFixed(2)}`
     ]);
 

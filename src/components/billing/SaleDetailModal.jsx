@@ -121,7 +121,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
   const calculateFine = (w, t) => {
     const we = parseFloat(w) || 0;
     const to = parseFloat(t) || 0;
-    setNewSilverPayment({ ...newSilverPayment, weight: w, touch: t, fine: ((we * to) / 100).toFixed(3) });
+    setNewSilverPayment({ ...newSilverPayment, weight: w, touch: t, fine: Math.round((we * to) / 100) });
   };
 
   const formatDate = (date) => new Date(date).toLocaleDateString('en-GB');
@@ -210,7 +210,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
                       <td className="p-2 border-r text-right text-gray-500">{parseFloat(item.wastage || 0).toFixed(3)}</td>
                       <td className="p-2 border-r text-right">{parseFloat(item.laborRatePerKg || 0).toFixed(0)}</td>
                       <td className="p-2 border-r text-right font-bold text-orange-700 bg-orange-50/50">
-                        {parseFloat(item.silverWeight).toFixed(3)}
+                        {Math.round(parseFloat(item.silverWeight))}
                       </td>
                       <td className="p-2 text-right font-bold text-green-700 bg-green-50/50">
                         {parseFloat(item.itemAmount || 0).toFixed(2)}
@@ -226,7 +226,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
                     <td className="p-2 border-r text-right">{itemsTotal.net.toFixed(3)}</td>
                     <td className="p-2 border-r" colSpan={3} />
                     <td className="p-2 border-r text-right text-orange-700 bg-orange-100">
-                      {itemsTotal.silver.toFixed(3)}
+                      {Math.round(itemsTotal.silver)}
                     </td>
                     <td className="p-2 text-right text-green-700 bg-green-100">
                       {parseFloat(sale.subtotal || 0).toFixed(2)}
@@ -255,7 +255,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
                   <tr className="bg-yellow-50 font-bold text-yellow-800 border-b border-yellow-200">
                     <td colSpan={10} className="p-2 border-r text-right">PREVIOUS DUE</td>
                     <td className="p-2 border-r text-right">
-                      {parseFloat(sale.previousBalanceSilver || 0).toFixed(3)}
+                      {Math.round(parseFloat(sale.previousBalanceSilver || 0))}
                     </td>
                     <td className="p-2 text-right">
                       {parseFloat(sale.previousBalanceLabor || 0).toFixed(2)}
@@ -266,7 +266,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
                   <tr className="bg-gray-200 font-bold border-b border-gray-400">
                     <td colSpan={10} className="p-2 border-r text-right uppercase">Total Due</td>
                     <td className="p-2 border-r text-right text-orange-900">
-                      {(itemsTotal.silver + parseFloat(sale.previousBalanceSilver || 0)).toFixed(3)}
+                      {Math.round(itemsTotal.silver + parseFloat(sale.previousBalanceSilver || 0))}
                     </td>
                     <td className="p-2 text-right text-green-900">
                       {(itemsTotal.labor + parseFloat(sale.previousBalanceLabor || 0)).toFixed(2)}
@@ -298,7 +298,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
                             <td className="p-2 border-r text-right font-medium">
                               {parseFloat(txn.silverWeight) !== 0 ? (
                                 <span className={parseFloat(txn.silverWeight) < 0 ? 'text-green-600' : 'text-red-600'}>
-                                  {parseFloat(txn.silverWeight).toFixed(3)}
+                                  {Math.round(parseFloat(txn.silverWeight))}
                                 </span>
                               ) : '-'}
                             </td>
@@ -326,7 +326,7 @@ export default function SaleDetailModal({ sale, onClose, onUpdate }) {
                   <tr className="bg-gray-800 text-white font-bold text-lg border-t-2 border-black">
                     <td colSpan={10} className="p-3 border-r border-gray-600 text-right">CLOSING BALANCE</td>
                     <td className="p-3 border-r border-gray-600 text-right text-orange-300">
-                      {parseFloat(sale.balanceSilver || 0).toFixed(3)} g
+                      {Math.round(parseFloat(sale.balanceSilver || 0))} g
                     </td>
                     <td className="p-3 text-right text-green-300">
                       ₹{parseFloat(sale.balanceLabor || 0).toFixed(2)}

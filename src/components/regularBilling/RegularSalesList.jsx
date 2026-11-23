@@ -264,13 +264,13 @@ export default function RegularSalesList() {
                         </button>
                       </td>
                       <td className="border p-2 text-right">
-                        {parseFloat(sale.totalSilverWeight || 0).toFixed(3)}
+                        {Math.round(parseFloat(sale.totalSilverWeight || 0))}
                       </td>
                       <td className="border p-2 text-right">
                         {parseFloat(sale.totalLaborCharges || 0).toFixed(2)}
                       </td>
                       <td className="border p-2 text-right">
-                        {parseFloat(sale.balanceSilver || 0).toFixed(3)}
+                        {Math.round(parseFloat(sale.balanceSilver || 0))}
                       </td>
                       <td className="border p-2 text-right">
                         {parseFloat(sale.balanceLabor || 0).toFixed(2)}
@@ -491,8 +491,8 @@ export default function RegularSalesList() {
                       <td className="border p-1" />
                       <td className="border p-1" />
                       <td className="border p-1 text-right">
-                        {parseFloat(selectedSale.totalSilverWeight || 0).toFixed(
-                          3
+                        {Math.round(
+                          parseFloat(selectedSale.totalSilverWeight || 0)
                         )}
                       </td>
                       <td className="border p-1 text-right">
@@ -511,9 +511,9 @@ export default function RegularSalesList() {
                         Silver
                       </td>
                       <td className="border p-1 text-right">
-                        {parseFloat(
-                          selectedSale.previousBalanceSilver || 0
-                        ).toFixed(3)}
+                        {Math.round(
+                          parseFloat(selectedSale.previousBalanceSilver || 0)
+                        )}
                       </td>
                       <td className="border p-1 text-right">
                         {parseFloat(
@@ -541,7 +541,7 @@ export default function RegularSalesList() {
                             Silver
                           </td>
                           <td className="border p-1 text-right">
-                            {parseFloat(txn.silverWeight || 0).toFixed(3)}
+                            {Math.round(parseFloat(txn.silverWeight || 0))}
                           </td>
                           <td className="border p-1 text-right">
                             {parseFloat(txn.laborAmount || 0).toFixed(2)}
@@ -558,9 +558,9 @@ export default function RegularSalesList() {
                         Silver
                       </td>
                       <td className="border p-1 text-right font-bold">
-                        {parseFloat(
-                          selectedSale.balanceSilver || 0
-                        ).toFixed(3)}
+                        {Math.round(
+                          parseFloat(selectedSale.balanceSilver || 0)
+                        )}
                       </td>
                       <td className="border p-1 text-right font-bold">
                         {parseFloat(
@@ -695,9 +695,9 @@ export default function RegularSalesList() {
                           {parseFloat(tx.cashAmount || 0).toFixed(2)}
                         </td>
                         <td className="border p-1 text-right">
-                          {parseFloat(
-                            tx.balanceSilverAfter || 0
-                          ).toFixed(3)}
+                          {Math.round(
+                            parseFloat(tx.balanceSilverAfter || 0)
+                          )}
                         </td>
                         <td className="border p-1 text-right">
                           {parseFloat(

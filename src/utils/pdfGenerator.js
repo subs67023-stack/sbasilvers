@@ -88,12 +88,11 @@ export const generatePDF = (sale) => {
         tounch.toFixed(2),
         wastage.toFixed(3),
         laborRate.toFixed(0),
-        silver.toFixed(3),
+        Math.round(silver).toString(),
         amount.toFixed(2)
       ]);
     });
 
-    // 2. TOTAL Row
     // 2. TOTAL Row
     tableBody.push([
       { content: 'TOTAL', colSpan: 4, styles: { fontStyle: 'bold', halign: 'center' } },
@@ -102,7 +101,7 @@ export const generatePDF = (sale) => {
       { content: parseFloat(sale.totalNetWeight || 0).toFixed(3), styles: { fontStyle: 'bold' } },
       '',
       '', // Spacer for Labor/kg (Touch covered by previous)
-      { content: parseFloat(sale.totalSilverWeight || 0).toFixed(3), styles: { fontStyle: 'bold' } },
+      { content: Math.round(parseFloat(sale.totalSilverWeight || 0)).toString(), styles: { fontStyle: 'bold' } },
       { content: (parseFloat(sale.subtotal || 0)).toFixed(2), styles: { fontStyle: 'bold' } }
     ]);
 
@@ -131,7 +130,7 @@ export const generatePDF = (sale) => {
     tableBody.push([
       { content: 'Previous Balance', colSpan: 8, styles: { fontStyle: 'bold', halign: 'left', fillColor: [255, 250, 205] } },
       { content: 'Silver', styles: { fontStyle: 'bold', halign: 'right', fillColor: [255, 250, 205] } },
-      { content: prevSilver.toFixed(3), styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } },
+      { content: Math.round(prevSilver).toString(), styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } },
       { content: prevLabor.toFixed(2), styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } }
     ]);
 
@@ -152,11 +151,11 @@ export const generatePDF = (sale) => {
           const w = parseFloat(txn.silverWeight || 0);
           // Show Cash Value from cashAmount
           const amt = parseFloat(txn.cashAmount || 0);
-          displaySilver = Math.abs(w).toFixed(3);
+          displaySilver = Math.round(Math.abs(w)).toString();
           displayLabor = Math.abs(amt).toFixed(2);
           label = "CASH FOR SILVER";
         } else {
-          if (parseFloat(txn.silverWeight || 0) !== 0) displaySilver = parseFloat(txn.silverWeight).toFixed(3);
+          if (parseFloat(txn.silverWeight || 0) !== 0) displaySilver = Math.round(parseFloat(txn.silverWeight)).toString();
           if (parseFloat(txn.amount || 0) !== 0) displayLabor = Math.abs(parseFloat(txn.amount)).toFixed(2);
         }
 
@@ -173,7 +172,7 @@ export const generatePDF = (sale) => {
     tableBody.push([
       { content: 'Closing Balance', colSpan: 8, styles: { fontStyle: 'bold', halign: 'left', fillColor: [240, 248, 255] } },
       { content: 'Silver', styles: { fontStyle: 'bold', fillColor: [240, 248, 255], halign: 'right' } },
-      { content: parseFloat(sale.balanceSilver || 0).toFixed(3), styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } },
+      { content: Math.round(parseFloat(sale.balanceSilver || 0)).toString(), styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } },
       { content: parseFloat(sale.balanceLabor || 0).toFixed(2), styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } }
     ]);
 
@@ -199,16 +198,16 @@ export const generatePDF = (sale) => {
       },
       columnStyles: {
         0: { cellWidth: 8, halign: 'center' }, // #
-        // Desc auto
-        // Stamp auto
+        1: { cellWidth: 'auto' }, // Desc
+        2: { cellWidth: 10, halign: 'center' }, // Stamp
         3: { cellWidth: 10, halign: 'center' }, // Pcs
-        4: { halign: 'right' }, // Gross
-        5: { halign: 'right' }, // Stone
-        6: { halign: 'right' }, // Net
-        7: { halign: 'right' }, // Touch
-        8: { halign: 'right' }, // Labor Rate
-        9: { halign: 'right', fontStyle: 'bold' }, // Silver
-        10: { halign: 'right', fontStyle: 'bold' } // Amount
+        4: { cellWidth: 15, halign: 'right' }, // Gross
+        5: { cellWidth: 15, halign: 'right' }, // Stone
+        6: { cellWidth: 15, halign: 'right' }, // Net
+        7: { cellWidth: 15, halign: 'right' }, // Touch
+        8: { cellWidth: 15, halign: 'right' }, // Labor Rate
+        9: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }, // Silver
+        10: { cellWidth: 20, halign: 'right', fontStyle: 'bold' } // Amount
       },
       didParseCell: (data) => {
         // Optional custom styling

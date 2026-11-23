@@ -69,7 +69,7 @@ export default function DailyAnalysisSection() {
             </div>
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
               <p className="text-sm opacity-90">Total Silver</p>
-              <p className="text-3xl font-bold">{parseFloat(analysis.totalSilver || 0).toFixed(2)} g</p>
+              <p className="text-3xl font-bold">{Math.round(parseFloat(analysis.totalSilver || 0))} g</p>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
               <p className="text-sm opacity-90">Total Amount</p>
@@ -93,14 +93,14 @@ export default function DailyAnalysisSection() {
               <div className="border-2 border-green-300 p-4 rounded-lg bg-green-50">
                 <h4 className="font-semibold text-green-800 mb-3">Wholesale Without GST</h4>
                 <p className="text-sm mb-1">Sales: <strong>{analysis.withoutGST.count}</strong></p>
-                <p className="text-sm mb-1">Silver: <strong>{parseFloat(analysis.withoutGST.silver || 0).toFixed(2)} g</strong></p>
+                <p className="text-sm mb-1">Silver: <strong>{Math.round(parseFloat(analysis.withoutGST.silver || 0))} g</strong></p>
                 <p className="text-sm mb-1">Amount: <strong>₹{parseFloat(analysis.withoutGST.amount || 0).toLocaleString()}</strong></p>
                 <p className="text-sm">Paid: <strong>₹{parseFloat(analysis.withoutGST.paid || 0).toLocaleString()}</strong></p>
               </div>
               <div className="border-2 border-blue-300 p-4 rounded-lg bg-blue-50">
                 <h4 className="font-semibold text-blue-800 mb-3">Wholesale With GST</h4>
                 <p className="text-sm mb-1">Sales: <strong>{analysis.withGST.count}</strong></p>
-                <p className="text-sm mb-1">Silver: <strong>{parseFloat(analysis.withGST.silver || 0).toFixed(2)} g</strong></p>
+                <p className="text-sm mb-1">Silver: <strong>{Math.round(parseFloat(analysis.withGST.silver || 0))} g</strong></p>
                 <p className="text-sm mb-1">Amount: <strong>₹{parseFloat(analysis.withGST.amount || 0).toLocaleString()}</strong></p>
                 <p className="text-sm">Paid: <strong>₹{parseFloat(analysis.withGST.paid || 0).toLocaleString()}</strong></p>
               </div>
@@ -144,7 +144,7 @@ export default function DailyAnalysisSection() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-right font-bold text-orange-600">
-                          {parseFloat(sale.totalSilverWeight).toFixed(2)}
+                          {Math.round(parseFloat(sale.totalSilverWeight))}
                         </td>
                         <td className="px-4 py-3 text-sm text-right font-medium">
                           ₹{parseFloat(sale.totalAmount).toLocaleString()}

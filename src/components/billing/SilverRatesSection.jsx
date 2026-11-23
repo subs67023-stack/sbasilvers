@@ -158,172 +158,359 @@ function ProductList({ products, loading, refresh }) {
 }
 
 function AddProductForm({ producers, onAdd }) {
-  const [formData, setFormData] = useState({
+  const [producerData, setProducerData] = useState({
     producerId: '',
     newProducerName: '',
-    name: '',
-    pieces: '',
-    grossWeight: '',
-    perPieceWeight: '',
-    touch: ''
+    newProducerPhone: ''
   });
 
-  const [calculated, setCalculated] = useState({
-    netWeight: 0,
-    pureSilver: 0
-  });
+  const [items, setItems] = useState([
+    {
+      name: '',
+      pieces: '',
+      grossWeight: '',
+      perPieceWeight: '',
+      netWeight: 0,
+      touch: '92.50',
+      pureSilver: 0
+    }
+  ]);
 
-  useEffect(() => {
-    const pcs = parseFloat(formData.pieces) || 0;
-    const gross = parseFloat(formData.grossWeight) || 0;
-    const ppWt = parseFloat(formData.perPieceWeight) || 0;
-    const touch = parseFloat(formData.touch) || 0;
+  const handleItemChange = (index, field, value) => {
+    const updated = [...items];
+    updated[index] = { ...updated[index], [field]: value };
+
+    const pcs = parseFloat(updated[index].pieces) || 0;
+    const gross = parseFloat(updated[index].grossWeight) || 0;
+    const ppWt = parseFloat(updated[index].perPieceWeight) || 0;
+    const touch = parseFloat(updated[index].touch) || 0;
 
     const deduction = pcs * ppWt;
     const net = Math.max(0, gross - deduction);
     const pure = (net * touch) / 100;
 
-    setCalculated({
-      netWeight: net,
-      pureSilver: pure
-    });
-  }, [formData.pieces, formData.grossWeight, formData.perPieceWeight, formData.touch]);
+    updated[index].netWeight = parseFloat(net.toFixed(3));
+    updated[index].pureSilver = parseFloat(pure.toFixed(3));
+
+    setItems(updated);
+  };
+
+  const addItem = () => {
+    setItems([
+      ...items,
+      {
+        name: '',
+        pieces: '',
+        grossWeight: '',
+        perPieceWeight: '',
+        netWeight: 0,
+        touch: '92.50',
+        pureSilver: 0
+      }
+    ]);
+  };
+
+  const removeItem = (index) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+    }
+  };
+
+  // Totals across all items
+  const totals = items.reduce(
+    (acc, item) => ({
+      pieces: acc.pieces + (parseInt(item.pieces) || 0),
+      grossWeight: acc.grossWeight + (parseFloat(item.grossWeight) || 0),
+      netWeight: acc.netWeight + (parseFloat(item.netWeight) || 0),
+      pureSilver: acc.pureSilver + (parseFloat(item.pureSilver) || 0)
+    }),
+    { pieces: 0, grossWeight: 0, netWeight: 0, pureSilver: 0 }
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!producerData.producerId) {
+      alert('Please select or enter a Producer / Karigar');
+      return;
+    }
+    if (producerData.producerId === 'new' && !producerData.newProducerName.trim()) {
+      alert('Please enter New Producer Name');
+      return;
+    }
+
+    // Validate that each item has a name, pieces > 0, and grossWeight > 0
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (!it.name.trim()) {
+        alert(`Item #${i + 1}: Name is required`);
+        return;
+      }
+      if (!it.pieces || parseInt(it.pieces) <= 0) {
+        alert(`Item #${i + 1} (${it.name}): Valid pieces count is required`);
+        return;
+      }
+      if (!it.grossWeight || parseFloat(it.grossWeight) <= 0) {
+        alert(`Item #${i + 1} (${it.name}): Gross weight is required`);
+        return;
+      }
+    }
+
     try {
       const payload = {
-        ...formData,
-        netWeight: calculated.netWeight
+        producerId: producerData.producerId,
+        newProducerName: producerData.newProducerName,
+        newProducerPhone: producerData.newProducerPhone,
+        items: items.map(it => ({
+          name: it.name,
+          pieces: parseInt(it.pieces),
+          grossWeight: parseFloat(it.grossWeight),
+          perPieceWeight: parseFloat(it.perPieceWeight || 0),
+          netWeight: parseFloat(it.netWeight),
+          touch: parseFloat(it.touch || 0)
+        }))
       };
+
       const res = await api.post('/billing/wholesale-products', payload);
       if (res.data.success) {
-        alert('Stock Added Successfully');
+        alert(`${items.length} Product item(s) added successfully!`);
         onAdd();
-        setFormData(prev => ({
-          ...prev,
-          name: '',
-          pieces: '',
-          grossWeight: '',
-          perPieceWeight: '',
-          touch: ''
-        }));
+        // Reset items to 1 empty item
+        setItems([
+          {
+            name: '',
+            pieces: '',
+            grossWeight: '',
+            perPieceWeight: '',
+            netWeight: 0,
+            touch: '92.50',
+            pureSilver: 0
+          }
+        ]);
       }
     } catch (e) {
       console.error(e);
-      alert('Error adding stock');
+      alert('Error adding stock: ' + (e.response?.data?.message || e.message));
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded border">
-          {/* PRODUCER SECTION */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Producer / Karigar</label>
-            <select
-              className="w-full border rounded p-2 mb-2"
-              value={formData.producerId}
-              onChange={e => setFormData({ ...formData, producerId: e.target.value, newProducerName: '' })}
-            >
-              <option value="">Select Existing...</option>
-              {producers.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-              <option value="new">+ Add New Producer</option>
-            </select>
-
-            {formData.producerId === 'new' && (
-              <input
-                type="text"
-                placeholder="Enter New Producer Name"
-                className="w-full border rounded p-2 border-blue-300 bg-blue-50"
-                value={formData.newProducerName}
-                onChange={e => setFormData({ ...formData, newProducerName: e.target.value })}
+        {/* PRODUCER SECTION */}
+        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">
+                Producer / Karigar (उत्पादक / कारागीर) *
+              </label>
+              <select
+                className="w-full border rounded-lg p-2.5 bg-white text-sm focus:ring-2 focus:ring-blue-500"
+                value={producerData.producerId}
+                onChange={e => setProducerData({ ...producerData, producerId: e.target.value, newProducerName: '' })}
                 required
-              />
+              >
+                <option value="">Select Existing Producer...</option>
+                {producers.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+                <option value="new">+ Add New Producer (नवीन जोडा)</option>
+              </select>
+            </div>
+
+            {producerData.producerId === 'new' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">New Producer Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Producer Name"
+                    className="w-full border rounded-lg p-2.5 border-blue-300 bg-blue-50 text-sm"
+                    value={producerData.newProducerName}
+                    onChange={e => setProducerData({ ...producerData, newProducerName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Phone (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Phone number"
+                    className="w-full border rounded-lg p-2.5 border-blue-300 bg-blue-50 text-sm"
+                    value={producerData.newProducerPhone}
+                    onChange={e => setProducerData({ ...producerData, newProducerPhone: e.target.value })}
+                  />
+                </div>
+              </div>
             )}
           </div>
+        </div>
 
-          {/* PRODUCT BASIC */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Item Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Bombay Chain"
-              className="w-full border rounded p-2"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
+        {/* ITEMS SECTION */}
+        <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
+          <div className="px-4 py-3 bg-gray-100 border-b flex justify-between items-center">
+            <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+              <span>📦</span>
+              <span>Product Items ({items.length})</span>
+            </h3>
+            <button
+              type="button"
+              onClick={addItem}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow-sm"
+            >
+              <span>➕</span>
+              <span>Add Item</span>
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-700 font-semibold border-b text-xs uppercase">
+                <tr>
+                  <th className="p-2.5 w-10 text-center">#</th>
+                  <th className="p-2.5 min-w-[180px] text-left">Item Name *</th>
+                  <th className="p-2.5 w-24 text-center">Pcs *</th>
+                  <th className="p-2.5 w-28 text-center">Gross Wt (g) *</th>
+                  <th className="p-2.5 w-28 text-center">Per Pc Wt (-) (g)</th>
+                  <th className="p-2.5 w-28 text-center bg-gray-100">Net Wt (Auto)</th>
+                  <th className="p-2.5 w-24 text-center">Touch %</th>
+                  <th className="p-2.5 w-28 text-center bg-gray-100">Pure Silver (g)</th>
+                  <th className="p-2.5 w-12 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {items.map((item, index) => (
+                  <tr key={index} className="hover:bg-blue-50/20 transition-colors">
+                    <td className="p-2 text-center text-gray-500 font-medium text-xs">
+                      {index + 1}
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        placeholder="e.g. Bombay Chain"
+                        className="w-full border rounded-lg p-2 text-sm focus:ring-1 focus:ring-blue-500"
+                        value={item.name}
+                        onChange={e => handleItemChange(index, 'name', e.target.value)}
+                        required
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="1"
+                        min="1"
+                        className="w-full border rounded-lg p-2 text-center text-sm font-semibold"
+                        placeholder="0"
+                        value={item.pieces}
+                        onChange={e => handleItemChange(index, 'pieces', e.target.value)}
+                        required
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        className="w-full border rounded-lg p-2 text-center text-sm"
+                        placeholder="0.000"
+                        value={item.grossWeight}
+                        onChange={e => handleItemChange(index, 'grossWeight', e.target.value)}
+                        required
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        className="w-full border rounded-lg p-2 text-center text-sm"
+                        placeholder="0.000"
+                        value={item.perPieceWeight}
+                        onChange={e => handleItemChange(index, 'perPieceWeight', e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2 bg-gray-50 text-center font-bold text-gray-900">
+                      {item.netWeight.toFixed(3)}
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="w-full border rounded-lg p-2 text-center text-blue-600 font-bold text-sm"
+                        placeholder="92.50"
+                        value={item.touch}
+                        onChange={e => handleItemChange(index, 'touch', e.target.value)}
+                        required
+                      />
+                    </td>
+                    <td className="p-2 bg-gray-50 text-center font-bold text-purple-700">
+                      {item.pureSilver.toFixed(3)}
+                    </td>
+                    <td className="p-2 text-center">
+                      {items.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          className="w-7 h-7 inline-flex items-center justify-center rounded-full text-red-600 hover:bg-red-100 font-bold transition-colors"
+                          title="Remove Item"
+                        >
+                          ✕
+                        </button>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              {/* SUMMARY TOTAL ROW */}
+              <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-300 text-gray-800 text-xs">
+                <tr>
+                  <td colSpan={2} className="p-2.5 text-right uppercase">
+                    TOTAL ({items.length} Item{items.length > 1 ? 's' : ''}):
+                  </td>
+                  <td className="p-2.5 text-center text-blue-700">
+                    {totals.pieces} pcs
+                  </td>
+                  <td className="p-2.5 text-center">
+                    {totals.grossWeight.toFixed(3)} g
+                  </td>
+                  <td className="p-2.5 text-center text-gray-400">
+                    -
+                  </td>
+                  <td className="p-2.5 bg-gray-200 text-center text-green-700">
+                    {totals.netWeight.toFixed(3)} g
+                  </td>
+                  <td className="p-2.5 text-center text-gray-400">
+                    -
+                  </td>
+                  <td className="p-2.5 bg-gray-200 text-center text-purple-700">
+                    {totals.pureSilver.toFixed(3)} g
+                  </td>
+                  <td className="p-2.5" />
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
 
-        {/* CALCULATIONS TABLE INPUT */}
-        <div className="border rounded overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-gray-600">
-              <tr>
-                <th className="p-2">Pcs</th>
-                <th className="p-2">Gross Wt</th>
-                <th className="p-2">Per Pc Wt (-)</th>
-                <th className="p-2 bg-gray-200">Net Wt (Auto)</th>
-                <th className="p-2">Touch %</th>
-                <th className="p-2 bg-gray-200">Pure Silver</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="p-2">
-                  <input type="number" step="1" className="w-full border p-1 text-center"
-                    placeholder="0"
-                    value={formData.pieces}
-                    onChange={e => setFormData({ ...formData, pieces: e.target.value })}
-                    required
-                  />
-                </td>
-                <td className="p-2">
-                  <input type="number" step="0.001" className="w-full border p-1 text-center"
-                    placeholder="0.000"
-                    value={formData.grossWeight}
-                    onChange={e => setFormData({ ...formData, grossWeight: e.target.value })}
-                    required
-                  />
-                </td>
-                <td className="p-2">
-                  <input type="number" step="0.001" className="w-full border p-1 text-center"
-                    placeholder="0.000"
-                    value={formData.perPieceWeight}
-                    onChange={e => setFormData({ ...formData, perPieceWeight: e.target.value })}
-                    required
-                  />
-                </td>
-                <td className="p-2 bg-gray-50 text-center font-bold text-lg">
-                  {calculated.netWeight.toFixed(3)}
-                </td>
-                <td className="p-2">
-                  <input type="number" step="0.01" className="w-full border p-1 text-center text-blue-600 font-bold"
-                    placeholder="92.50"
-                    value={formData.touch}
-                    onChange={e => setFormData({ ...formData, touch: e.target.value })}
-                    required
-                  />
-                </td>
-                <td className="p-2 bg-gray-50 text-center font-bold text-gray-600">
-                  {calculated.pureSilver.toFixed(3)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        {/* BUTTONS: ADD ITEM & SUBMIT */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
+          <button
+            type="button"
+            onClick={addItem}
+            className="w-full sm:w-auto px-5 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl hover:bg-blue-100 font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="text-lg">➕</span>
+            <span>+ Add Another Item (+ आणखी आयटम जोडा)</span>
+          </button>
 
-        <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-green-600 text-white px-8 py-3 rounded font-bold hover:bg-green-700 shadow-lg"
+            className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
           >
-            Save Stock Entry
+            <span>💾</span>
+            <span>Save Stock Entry ({items.length} {items.length > 1 ? 'Items' : 'Item'})</span>
           </button>
         </div>
       </form>

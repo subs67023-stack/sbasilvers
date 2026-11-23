@@ -292,13 +292,13 @@ export default function SalesListSection() {
                           {getBillingTypeBadge(sale.billingType)}
                         </td>
                         <td className="border p-2 text-right">
-                          {parseFloat(sale.totalSilverWeight || 0).toFixed(3)}
+                          {Math.round(parseFloat(sale.totalSilverWeight || 0))}
                         </td>
                         <td className="border p-2 text-right font-medium">
                           {parseFloat(sale.totalAmount || 0).toLocaleString()}
                         </td>
                         <td className="border p-2 text-right font-medium text-orange-600">
-                          {parseFloat(sale.balanceSilver || 0).toFixed(3)}
+                          {Math.round(parseFloat(sale.balanceSilver || 0))}
                         </td>
                         <td className="border p-2 text-right text-red-600 font-medium">
                           {parseFloat(sale.balanceLabor || 0).toLocaleString()}
@@ -486,7 +486,7 @@ export default function SalesListSection() {
                       <td className="border p-1" />
                       <td className="border p-1" />
                       <td className="border p-1 text-right">
-                        {parseFloat(selectedSale.totalSilverWeight || 0).toFixed(3)}
+                        {Math.round(parseFloat(selectedSale.totalSilverWeight || 0))}
                       </td>
                       <td className="border p-1 text-right">
                         {parseFloat(selectedSale.subtotal || 0).toFixed(2)}
@@ -497,7 +497,7 @@ export default function SalesListSection() {
                     <tr className="bg-yellow-50">
                       <td className="border p-1 font-semibold" colSpan={8}>Previous Due</td>
                       <td className="border p-1 text-right font-medium">
-                        {parseFloat(selectedSale.previousBalanceSilver || 0).toFixed(3)}
+                        {Math.round(parseFloat(selectedSale.previousBalanceSilver || 0))}
                       </td>
                       <td className="border p-1 text-right">
                         {parseFloat(selectedSale.previousBalanceLabor || 0).toFixed(2)}
@@ -508,7 +508,7 @@ export default function SalesListSection() {
                     <tr className="bg-gray-200 font-bold border-t border-gray-400">
                       <td className="border p-1 text-right uppercase" colSpan={8}>Total Due</td>
                       <td className="border p-1 text-right text-orange-900">
-                        {(parseFloat(selectedSale.totalSilverWeight || 0) + parseFloat(selectedSale.previousBalanceSilver || 0)).toFixed(3)}
+                        {Math.round(parseFloat(selectedSale.totalSilverWeight || 0) + parseFloat(selectedSale.previousBalanceSilver || 0))}
                       </td>
                       <td className="border p-1 text-right text-green-900">
                         {(parseFloat(selectedSale.subtotal || 0) + parseFloat(selectedSale.previousBalanceLabor || 0)).toFixed(2)}
@@ -523,7 +523,7 @@ export default function SalesListSection() {
                           {txn.type.replace('_', ' ').toUpperCase()} {txn.notes ? ` - ${txn.notes}` : ''}
                         </td>
                         <td className="border p-1 text-right font-medium">
-                          {parseFloat(txn.silverWeight || 0).toFixed(3)}
+                          {Math.round(parseFloat(txn.silverWeight || 0))}
                         </td>
                         <td className="border p-1 text-right font-medium">
                           {/* Use cashAmount for cash_for_silver, else amount */}
@@ -536,7 +536,7 @@ export default function SalesListSection() {
                     <tr className="bg-blue-50">
                       <td className="border p-1 font-semibold" colSpan={8}>Closing Balance</td>
                       <td className="border p-1 text-right font-bold">
-                        {parseFloat(selectedSale.balanceSilver || 0).toFixed(3)}
+                        {Math.round(parseFloat(selectedSale.balanceSilver || 0))}
                       </td>
                       <td className="border p-1 text-right font-bold">
                         {parseFloat(selectedSale.balanceLabor || 0).toFixed(2)}

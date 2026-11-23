@@ -27,8 +27,8 @@ export default function PaymentModal({ open, sale, onClose }) {
   const calcRowFine = row => {
     const weight = parseFloat(row.weight || 0);
     const touch = parseFloat(row.touch || 0);
-    if (!weight || !touch) return '0.000';
-    return ((weight * touch) / 100).toFixed(3);
+    if (!weight || !touch) return '0';
+    return Math.round((weight * touch) / 100).toString();
   };
 
   const addSilverRow = () => {
@@ -167,7 +167,7 @@ export default function PaymentModal({ open, sale, onClose }) {
               <p>
                 Balance Silver:{' '}
                 <span className="font-semibold text-orange-600">
-                  {parseFloat(sale.balanceSilver || 0).toFixed(3)} g
+                  {Math.round(parseFloat(sale.balanceSilver || 0))} g
                 </span>
               </p>
               <p>

@@ -218,7 +218,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
     if (field === 'weight' || field === 'touch') {
       const w = parseFloat(updated.weight || 0);
       const t = parseFloat(updated.touch || 0);
-      updated.fine = ((w * t) / 100).toFixed(3);
+      updated.fine = Math.round((w * t) / 100);
     }
     setNewSilverPayment(updated);
   };
@@ -249,7 +249,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
       const laborRate = parseFloat(item.laborRatePerKg) || 0;
       const gross = parseFloat(item.grossWeight) || 0;
 
-      const silver = ((touch + wastage) * net) / 100;
+      const silver = Math.round(((touch + wastage) * net) / 100);
       // Formula: Labor = Gross * Rate / 1000
       const labor = (gross / 1000) * laborRate;
 
@@ -270,7 +270,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
 
     // Payments
     let paidSilver = 0; // In grams
-    silverPaymentsList.forEach(p => paidSilver += parseFloat(p.fine || 0));
+    silverPaymentsList.forEach(p => paidSilver += Math.round(parseFloat(p.fine || 0)));
 
     // Cash Paid
     let paidAmount = parseFloat(payments.cash || 0);
@@ -285,38 +285,38 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
     let prevSilver = 0;
     if (selectedCustomer && formData.includePreviousDue) {
       prevLabor = parseFloat(selectedCustomer.balanceLabor || 0);
-      prevSilver = parseFloat(selectedCustomer.balanceSilver || 0);
+      prevSilver = Math.round(parseFloat(selectedCustomer.balanceSilver || 0));
     }
 
     // Bill Total (Current + Previous)
     const billTotalLabor = parseFloat(totalAmount) + prevLabor;
-    const billTotalSilver = totalSilverWeight + prevSilver;
+    const billTotalSilver = Math.round(totalSilverWeight + prevSilver);
 
     // Balance
     const balanceLabor = billTotalLabor - paidAmount;
 
     // Balance Silver
-    const c4sWeight = parseFloat(payments.cashForSilver.weight || 0);
+    const c4sWeight = Math.round(parseFloat(payments.cashForSilver.weight || 0));
     // FIX: Cash for Silver REDUCES Silver Balance (It is a sale of silver)
-    const balanceSilver = billTotalSilver - paidSilver - c4sWeight;
+    const balanceSilver = Math.round(billTotalSilver - paidSilver - c4sWeight);
 
     return {
       totalNetWeight: totalNetWeight.toFixed(3),
-      totalSilverWeight: totalSilverWeight.toFixed(3),
+      totalSilverWeight: Math.round(totalSilverWeight),
       subtotal: subtotal.toFixed(2),
       cgst: cgst.toFixed(2),
       sgst: sgst.toFixed(2),
       totalAmount: totalAmount.toFixed(2),
-      paidSilver: paidSilver.toFixed(3),
+      paidSilver: Math.round(paidSilver),
       paidAmount: paidAmount.toFixed(2),
 
       prevLabor: prevLabor.toFixed(2),
-      prevSilver: prevSilver.toFixed(3),
+      prevSilver: Math.round(prevSilver),
       billTotalLabor: billTotalLabor.toFixed(2),
-      billTotalSilver: billTotalSilver.toFixed(3),
+      billTotalSilver: Math.round(billTotalSilver),
 
       balanceLabor: balanceLabor.toFixed(2),
-      balanceSilver: balanceSilver.toFixed(3),
+      balanceSilver: Math.round(balanceSilver),
       cashForSilverValue: paidSilverValue.toFixed(2)
     };
   };
@@ -325,6 +325,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent double submission
     setLoading(true);
 
     try {
@@ -332,6 +333,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
       const payload = {
         customerId: formData.customerId,
         billingType: formData.billingType,
+        date: formData.date,
         items: items,
         silverRate: 0, // No Rate
         paidAmount: payments.cash || 0, // Cash payment
@@ -409,7 +411,13 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Date</label>
-            <input type="date" value={formData.date} disabled className="w-full p-2 border rounded bg-gray-50" />
+            <input
+              type="date"
+              value={formData.date}
+              onChange={e => setFormData({ ...formData, date: e.target.value })}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
           {/* Silver Rate Input REMOVED */}
         </div>
@@ -491,7 +499,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
                     <input type="number" value={item.laborRatePerKg} onChange={(e) => handleItemChange(index, 'laborRatePerKg', e.target.value)} className="w-full p-1 border rounded text-xs" />
                   </td>
                   <td className="border p-1 text-right text-gray-600 text-xs">
-                    {(((parseFloat(item.touch) + parseFloat(item.wastage)) * parseFloat(item.netWeight)) / 100).toFixed(2)}
+                    {Math.round(((parseFloat(item.touch) + parseFloat(item.wastage)) * parseFloat(item.netWeight)) / 100)}
                   </td>
                   <td className="border p-1 text-right font-medium text-xs">
                     {(parseFloat(item.grossWeight) / 1000 * parseFloat(item.laborRatePerKg)).toFixed(0)}

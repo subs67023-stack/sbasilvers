@@ -230,6 +230,7 @@ const CreateBill = ({ editingBill, onBillSaved }) => {
     };
 
     const handleSubmit = async () => {
+        if (loading) return;
         if (!billDetails.customerId) {
             alert('Please select a customer');
             return;

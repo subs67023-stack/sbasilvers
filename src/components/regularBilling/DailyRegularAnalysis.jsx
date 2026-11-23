@@ -69,7 +69,7 @@ export default function DailyRegularAnalysis() {
             </div>
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
               <p className="text-sm opacity-90">Total Silver</p>
-              <p className="text-3xl font-bold">{parseFloat(analysis.totalSilver || 0).toFixed(2)} g</p>
+              <p className="text-3xl font-bold">{Math.round(parseFloat(analysis.totalSilver || 0))} g</p>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
               <p className="text-sm opacity-90">Total Amount</p>
@@ -112,7 +112,7 @@ export default function DailyRegularAnalysis() {
                           {sale.customer.name}
                         </td>
                         <td className="px-4 py-3 text-sm text-right font-bold text-orange-600">
-                          {parseFloat(sale.totalSilverWeight).toFixed(2)}
+                          {Math.round(parseFloat(sale.totalSilverWeight))}
                         </td>
                         <td className="px-4 py-3 text-sm text-right font-medium">
                           ₹{parseFloat(sale.totalAmount).toLocaleString()}

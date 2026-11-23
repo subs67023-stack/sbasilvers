@@ -125,7 +125,7 @@ export default function ProductPaymentModal({ open, sale, onClose, onUpdate }) {
                     <p>Voucher: <b>{sale.voucherNumber}</b></p>
                     <div className="grid grid-cols-2 gap-4 mt-2">
                         <div className="text-red-600 font-bold">Labor Due: ₹{sale.balanceLabor}</div>
-                        <div className="text-orange-600 font-bold">Silver Due: {sale.balanceSilver} g</div>
+                        <div className="text-orange-600 font-bold">Silver Due: {Math.round(parseFloat(sale.balanceSilver || 0))} g</div>
                     </div>
                 </div>
 

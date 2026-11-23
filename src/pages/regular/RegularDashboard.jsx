@@ -18,6 +18,11 @@ const RegularDashboard = ({ children }) => {
       icon: '💰'
     },
     {
+      name: 'Pital Kaam',
+      path: '/regular/pital-kaam',
+      icon: '🪙'
+    },
+    {
       name: 'Jama/Kharch (Silver)',
       path: '/regular/jama-kharch-silver',
       icon: '💎'

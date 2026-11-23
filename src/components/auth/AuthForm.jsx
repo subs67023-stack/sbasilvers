@@ -37,9 +37,9 @@ const AuthForm = () => {
       
       // Auto-route based on role
       if (user.role === 'admin') {
-        navigate('/admin');
+        navigate('/admin', { replace: true });
       } else {
-        navigate('/');
+        navigate('/under-progress', { replace: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
@@ -60,7 +60,7 @@ const AuthForm = () => {
       };
       
       const user = await signup(userData);
-      navigate('/');
+      navigate('/under-progress', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed. Please try again.');
     } finally {

@@ -97,12 +97,12 @@ const BullenSection = () => {
     const bhav = parseFloat(kachFormData.bhav) || 0;
     
     if (weight > 0 && touch > 0) {
-      const fine = (weight * touch) / 100;
+      const fine = Math.round((weight * touch) / 100);
       const total = fine * bhav;
       
       setKachFormData(prev => ({
         ...prev,
-        fine: fine.toFixed(3),
+        fine: fine.toString(),
         totalAmount: total.toFixed(2)
       }));
     }
@@ -114,10 +114,10 @@ const BullenSection = () => {
     const touch = parseFloat(gutBadalFormData.touch) || 0;
     
     if (rawSilver > 0 && touch > 0) {
-      const totalSilver = (rawSilver * touch) / 100;
+      const totalSilver = Math.round((rawSilver * touch) / 100);
       setGutBadalFormData(prev => ({
         ...prev,
-        totalSilver: totalSilver.toFixed(3)
+        totalSilver: totalSilver.toString()
       }));
     }
   }, [gutBadalFormData.rawSilver, gutBadalFormData.touch]);
@@ -128,10 +128,10 @@ const BullenSection = () => {
     const touch = parseFloat(kachiBadalFormData.touch) || 0;
     
     if (weight > 0 && touch > 0) {
-      const fine = (weight * touch) / 100;
+      const fine = Math.round((weight * touch) / 100);
       setKachiBadalFormData(prev => ({
         ...prev,
-        fine: fine.toFixed(3)
+        fine: fine.toString()
       }));
     }
   }, [kachiBadalFormData.weight, kachiBadalFormData.touch]);

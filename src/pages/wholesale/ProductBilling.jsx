@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import WholesaleDashboard from './WholesaleDashboard';
 import ProductSalesListSection from '../../components/product-billing/ProductSalesListSection';
 import CreateSaleSection from '../../components/product-billing/CreateSaleSection';
 import ProductCustomersSection from '../../components/product-billing/CustomersSection';
@@ -14,7 +15,8 @@ const ProductBillingDashboard = () => {
     ];
 
     return (
-        <div className="space-y-6">
+        <WholesaleDashboard>
+            <div className="space-y-6">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -73,6 +75,7 @@ const ProductBillingDashboard = () => {
                 </div>
             </div>
         </div>
+        </WholesaleDashboard>
     );
 };
 

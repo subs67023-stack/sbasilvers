@@ -31,6 +31,7 @@ export default function CreateRegularSale({
 
   const [formData, setFormData] = useState({
     regularCustomerId: '',
+    date: new Date().toISOString().split('T')[0],
     includePreviousDue: true,
     notes: ''
   });
@@ -91,6 +92,9 @@ export default function CreateRegularSale({
     if (editSale && customers.length > 0) {
       setFormData({
         regularCustomerId: String(editSale.regularCustomerId),
+        date: editSale.saleDate
+          ? new Date(editSale.saleDate).toISOString().split('T')[0]
+          : (editSale.date ? new Date(editSale.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
         includePreviousDue: editSale.includePreviousDue || false,
         notes: editSale.notes || ''
       });
@@ -280,7 +284,7 @@ export default function CreateRegularSale({
     if (field === 'weight' || field === 'touch') {
       const w = parseFloat(updated.weight || 0);
       const t = parseFloat(updated.touch || 0);
-      updated.fine = ((w * t) / 100).toFixed(3);
+      updated.fine = Math.round((w * t) / 100);
     }
     setNewSilverPayment(updated);
   };
@@ -312,7 +316,7 @@ export default function CreateRegularSale({
       const touch = parseFloat(item.touch) || 0;
       const laborRate = parseFloat(item.laborRatePerKg) || 0;
 
-      const silverWeight = ((touch + wastage) * netWeight) / 100;
+      const silverWeight = Math.round(((touch + wastage) * netWeight) / 100);
       const labor = (netWeight * laborRate) / 1000;
 
       totalGross += grossWeight;
@@ -323,13 +327,14 @@ export default function CreateRegularSale({
       totalLabor += labor;
     });
 
+    totalSilverWeight = Math.round(totalSilverWeight);
     let balanceSilver = totalSilverWeight;
     let balanceLabor = totalLabor;
 
     let prevSilver = 0;
     let prevLabor = 0;
     if (formData.includePreviousDue && selectedCustomer) {
-      prevSilver = previousDue.totalPendingSilver;
+      prevSilver = Math.round(previousDue.totalPendingSilver || 0);
       prevLabor = previousDue.totalPendingLabor;
       balanceSilver += prevSilver;
       balanceLabor += prevLabor;
@@ -340,19 +345,19 @@ export default function CreateRegularSale({
 
     if (paymentMode === 'silver' || paymentMode === 'multiple') {
       silverPaymentsList.forEach(sp => {
-        paidSilver += parseFloat(sp.fine || 0);
+        paidSilver += Math.round(parseFloat(sp.fine || 0));
       });
     }
 
     if (paymentMode === 'cashsilver' || paymentMode === 'multiple') {
-      paidSilver += parseFloat(payments.cashForSilver.weight || 0);
+      paidSilver += Math.round(parseFloat(payments.cashForSilver.weight || 0));
     }
 
     if (paymentMode === 'labor' || paymentMode === 'multiple') {
       paidLabor += parseFloat(payments.labor || 0);
     }
 
-    balanceSilver -= paidSilver;
+    balanceSilver = Math.round(balanceSilver - paidSilver);
     balanceLabor -= paidLabor;
 
     const cashAmount =
@@ -364,13 +369,13 @@ export default function CreateRegularSale({
       totalStone: totalStone.toFixed(3),
       totalNetWeight: totalNetWeight.toFixed(3),
       totalWastage: totalWastage.toFixed(3),
-      totalSilverWeight: totalSilverWeight.toFixed(3),
+      totalSilverWeight: Math.round(totalSilverWeight),
       totalLabor: totalLabor.toFixed(2),
-      prevSilver: prevSilver.toFixed(3),
+      prevSilver: Math.round(prevSilver),
       prevLabor: prevLabor.toFixed(2),
-      paidSilver: paidSilver.toFixed(3),
+      paidSilver: Math.round(paidSilver),
       paidLabor: paidLabor.toFixed(2),
-      balanceSilver: balanceSilver.toFixed(3),
+      balanceSilver: Math.round(balanceSilver),
       balanceLabor: balanceLabor.toFixed(2),
       cashAmount
     };
@@ -380,6 +385,8 @@ export default function CreateRegularSale({
 
   const handleSubmit = async e => {
     e.preventDefault();
+
+    if (loading) return;
 
     if (!formData.regularCustomerId) {
       alert('Please select a customer');
@@ -396,6 +403,7 @@ export default function CreateRegularSale({
     try {
       const payload = {
         regularCustomerId: formData.regularCustomerId,
+        date: formData.date,
         items: items.map(item => ({
           description: item.description,
           stamp: item.stamp && item.stamp.trim() ? item.stamp.trim() : '-',
@@ -443,6 +451,7 @@ export default function CreateRegularSale({
 
         setFormData({
           regularCustomerId: '',
+          date: new Date().toISOString().split('T')[0],
           includePreviousDue: true,
           notes: ''
         });
@@ -509,8 +518,8 @@ export default function CreateRegularSale({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* CUSTOMER SELECTION */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* CUSTOMER SELECTION & DATE */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">
                 Select Customer
@@ -529,6 +538,18 @@ export default function CreateRegularSale({
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Bill Date
+              </label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                required
+              />
             </div>
             <div className="flex items-end">
               <button
@@ -740,7 +761,7 @@ export default function CreateRegularSale({
                           />
                         </td>
                         <td className="border p-1 text-right">
-                          {silverWeight.toFixed(3)}
+                          {Math.round(silverWeight)}
                         </td>
                         <td className="border p-1 text-right">
                           {laborAmount.toFixed(2)}

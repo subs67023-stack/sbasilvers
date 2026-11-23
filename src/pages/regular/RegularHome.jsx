@@ -126,7 +126,7 @@ const RegularHome = () => {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <a
               href="/regular/billing"
               className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
@@ -147,6 +147,13 @@ const RegularHome = () => {
             >
               <span className="text-2xl">💵</span>
               <span className="font-medium">Jama/Kharch Cash</span>
+            </a>
+            <a
+              href="/regular/pital-kaam"
+              className="flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+            >
+              <span className="text-2xl">🪙</span>
+              <span className="font-medium">Pital Kaam</span>
             </a>
           </div>
         </div>

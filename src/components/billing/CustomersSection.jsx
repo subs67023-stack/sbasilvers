@@ -76,7 +76,7 @@ export default function CustomersSection() {
         </div>
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
           <p className="text-sm opacity-90">Total Outstanding (Ag)</p>
-          <p className="text-3xl font-bold">{customers.reduce((sum, c) => sum + parseFloat(c.balanceSilver || 0), 0).toFixed(3)} g</p>
+          <p className="text-3xl font-bold">{Math.round(customers.reduce((sum, c) => sum + parseFloat(c.balanceSilver || 0), 0))} g</p>
         </div>
         <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
           <p className="text-sm opacity-90">With Balance</p>
@@ -185,7 +185,7 @@ export default function CustomersSection() {
                       </td>
                       <td className={`px-4 py-3 text-sm text-right font-medium ${balanceSilver > 0 ? 'text-red-600' : balanceSilver < 0 ? 'text-blue-600' : 'text-green-600'
                         }`}>
-                        {Math.abs(balanceSilver).toFixed(3)} g
+                        {Math.round(Math.abs(balanceSilver))} g
                       </td>
                       <td className="px-4 py-3 text-center">
                         {hasDue && (

@@ -40,7 +40,7 @@ export const exportSalesToExcel = (sales) => {
     'Customer': sale.customer?.name || '-',
     'Type': sale.billingType.toUpperCase(),
     'Net Weight (g)': parseFloat(sale.totalNetWeight).toFixed(3),
-    'Silver Weight (kg)': parseFloat(sale.totalSilverWeight).toFixed(3),
+    'Silver Weight (g)': Math.round(parseFloat(sale.totalSilverWeight)),
     'Total Amount': parseFloat(sale.totalAmount).toFixed(2),
     'Paid': parseFloat(sale.paidAmount).toFixed(2),
     'Balance': parseFloat(sale.balanceAmount).toFixed(2),

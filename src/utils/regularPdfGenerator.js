@@ -86,7 +86,7 @@ export const generateRegularPDF = sale => {
         touch.toFixed(2),
         wastage.toFixed(3),
         laborRate.toFixed(0), // New Col: Labor Rate
-        silver.toFixed(3),
+        Math.round(silver).toString(),
         labor.toFixed(2)      // Renamed: Amount
       ]);
     });
@@ -100,7 +100,7 @@ export const generateRegularPDF = sale => {
       '',
       '',
       '', // Labor Rate empty
-      { content: parseFloat(sale.totalSilverWeight || 0).toFixed(3), styles: { fontStyle: 'bold' } },
+      { content: Math.round(parseFloat(sale.totalSilverWeight || 0)).toString(), styles: { fontStyle: 'bold' } },
       { content: parseFloat(sale.totalLaborCharges || 0).toFixed(2), styles: { fontStyle: 'bold' } }
     ]);
 
@@ -113,7 +113,7 @@ export const generateRegularPDF = sale => {
     tableBody.push([
       { content: 'Previous Due', colSpan: 9, styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } }, // span -> 9
       { content: 'Silver', styles: { fontStyle: 'bold', halign: 'right', fillColor: [255, 250, 205] } }, // Col 9 (Labor Rate col)
-      { content: prevSilver.toFixed(3), styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } },      // Col 10 (Silver)
+      { content: Math.round(prevSilver).toString(), styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } },      // Col 10 (Silver)
       { content: prevLabor.toFixed(2), styles: { fontStyle: 'bold', fillColor: [255, 250, 205] } }       // Col 11 (Amount)
     ]);
 
@@ -139,10 +139,10 @@ export const generateRegularPDF = sale => {
         const amt = parseFloat(txn.cashAmount || 0);
 
         if (!notes.toLowerCase().includes('paid')) {
-          notes = `${notes} (Paid Rs.${amt.toFixed(2)} for ${Math.abs(w).toFixed(3)}g)`;
+          notes = `${notes} (Paid Rs.${amt.toFixed(2)} for ${Math.round(Math.abs(w))}g)`;
         }
 
-        displaySilver = parseFloat(txn.silverWeight || 0).toFixed(3);
+        displaySilver = Math.round(Math.abs(w)).toString();
         displayLabor = amt.toFixed(2);
       }
       else if (txn.type === 'labor_payment') {
@@ -151,7 +151,7 @@ export const generateRegularPDF = sale => {
       }
       else {
         // Standard (Silver Payment, Return)
-        if (parseFloat(txn.silverWeight || 0) !== 0) displaySilver = parseFloat(txn.silverWeight).toFixed(3);
+        if (parseFloat(txn.silverWeight || 0) !== 0) displaySilver = Math.round(parseFloat(txn.silverWeight)).toString();
         if (parseFloat(txn.laborAmount || 0) !== 0) displayLabor = parseFloat(txn.laborAmount).toFixed(2);
       }
 
@@ -170,7 +170,7 @@ export const generateRegularPDF = sale => {
     tableBody.push([
       { content: 'Closing Balance', colSpan: 9, styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } }, // Light AliceBlue
       { content: 'Silver', styles: { fontStyle: 'bold', halign: 'right', fillColor: [240, 248, 255] } },
-      { content: parseFloat(sale.balanceSilver || 0).toFixed(3), styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } },
+      { content: Math.round(parseFloat(sale.balanceSilver || 0)).toString(), styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } },
       { content: parseFloat(sale.balanceLabor || 0).toFixed(2), styles: { fontStyle: 'bold', fillColor: [240, 248, 255] } }
     ]);
 

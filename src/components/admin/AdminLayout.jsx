@@ -23,12 +23,9 @@ const AdminLayout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/admin" className="flex items-center space-x-3">
-              <img
-                src="/SBA2.jpg"
-                alt="SBA Logo"
-                className="h-10 w-auto"
-              />
+              <span className="text-3xl">👑</span>
               <div>
+                <span className="text-xl font-bold text-gray-900">ARGENTUM</span>
                 <span className="ml-2 px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded">
                   ADMIN
                 </span>
@@ -39,12 +36,13 @@ const AdminLayout = ({ children }) => {
               <span className="text-sm text-gray-600 hidden sm:block">
                 Welcome, <strong className="text-gray-900">{user?.firstName}</strong>
               </span>
-              <Link
+              {/* Temporarily disabled store link - kept intact for later */}
+              {/* <Link
                 to="/"
                 className="px-4 py-2 text-sm border-2 border-gray-300 text-gray-700 rounded-lg hover:border-blue-500 hover:text-blue-500 transition-all"
               >
                 View Store
-              </Link>
+              </Link> */}
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
@@ -62,18 +60,19 @@ const AdminLayout = ({ children }) => {
           <nav className="p-4 space-y-2">
             {menuItems.map((item) => {
               // FIXED: Proper active state logic
-              const isActive = item.exact
+              const isActive = item.exact 
                 ? location.pathname === item.path  // Exact match for Dashboard
                 : location.pathname.startsWith(item.path); // Starts with for others
-
+              
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                    isActive
                       ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg'
                       : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                  }`}
                 >
                   <span className="text-2xl">{item.icon}</span>
                   <span className="font-semibold">{item.label}</span>

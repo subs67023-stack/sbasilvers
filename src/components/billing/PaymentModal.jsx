@@ -183,7 +183,7 @@ export default function PaymentModal({ open, sale, onClose, onUpdate }) {
                                 <p className="text-gray-600">Pending Balances</p>
                                 <div className="flex justify-end gap-3">
                                     <span className="text-orange-600 font-bold whitespace-nowrap">
-                                        Build Silver: {parseFloat(sale.balanceSilver || 0).toFixed(3)}
+                                        Build Silver: {Math.round(parseFloat(sale.balanceSilver || 0))} g
                                     </span>
                                     <span className="text-green-600 font-bold whitespace-nowrap">
                                         Amt: {parseFloat(sale.balanceLabor || 0).toFixed(2)}

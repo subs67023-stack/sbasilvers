@@ -109,7 +109,7 @@ const ProductTable = ({ products, onDelete, loading }) => {
                   ${parseFloat(product.price).toFixed(2)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {parseFloat(product.silverWeight).toFixed(2)}g
+                  {Math.round(parseFloat(product.silverWeight))}g
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {product.stock}

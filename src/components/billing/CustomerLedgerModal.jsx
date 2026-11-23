@@ -71,7 +71,7 @@ export default function CustomerLedgerModal({ customer, onClose }) {
               </div>
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
                 <p className="text-sm opacity-90">Current Silver Balance</p>
-                <p className="text-4xl font-bold">{parseFloat(customer.balanceSilver || 0).toFixed(3)} g</p>
+                <p className="text-4xl font-bold">{Math.round(parseFloat(customer.balanceSilver || 0))} g</p>
               </div>
             </div>
 
@@ -181,13 +181,13 @@ export default function CustomerLedgerModal({ customer, onClose }) {
 
                             {/* Silver Columns */}
                             <td className="px-4 py-3 text-right text-orange-700 font-medium bg-orange-50 bg-opacity-30">
-                              {sDebit > 0 ? sDebit.toFixed(3) : '-'}
+                              {sDebit > 0 ? Math.round(sDebit) : '-'}
                             </td>
                             <td className="px-4 py-3 text-right text-green-700 font-medium bg-green-50 bg-opacity-30">
-                              {sCredit > 0 ? sCredit.toFixed(3) : '-'}
+                              {sCredit > 0 ? Math.round(sCredit) : '-'}
                             </td>
                             <td className="px-4 py-3 text-right font-bold bg-gray-50">
-                              {parseFloat(txn.balanceSilverAfter || 0).toFixed(3)} g
+                              {Math.round(parseFloat(txn.balanceSilverAfter || 0))} g
                             </td>
 
                             {/* Amount Columns */}

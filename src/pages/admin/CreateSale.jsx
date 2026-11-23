@@ -12,6 +12,7 @@ export default function CreateSale() {
   
   const [formData, setFormData] = useState({
     customerId: '',
+    date: new Date().toISOString().split('T')[0],
     silverRate: '',
     cgstPercent: 1.5,
     sgstPercent: 1.5,
@@ -173,6 +174,8 @@ export default function CreateSale() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
     
     if (!formData.customerId) {
       alert('Please select a customer');
@@ -316,10 +319,20 @@ export default function CreateSale() {
           )}
         </div>
 
-        {/* Silver Rate */}
+        {/* Date & Silver Rate */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Silver Rate</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <h2 className="text-xl font-semibold mb-4">Date & Silver Rate</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Sale Date</label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium mb-2">Rate per Gram (₹)</label>
               <input
@@ -330,14 +343,12 @@ export default function CreateSale() {
                 className="w-full p-2 border rounded"
                 required
               />
-            </div>
-            {silverRate && (
-              <div className="flex items-end">
-                <p className="text-sm text-gray-600">
+              {silverRate && (
+                <p className="text-xs text-gray-500 mt-1">
                   Current Rate: ₹{silverRate.ratePerGram}/gram (Date: {silverRate.date})
                 </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

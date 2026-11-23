@@ -141,13 +141,13 @@ export default function CustomerLedgerModal({ customer, onClose }) {
 
                                                     {/* Silver Columns */}
                                                     <td className="p-3 text-right text-orange-700 font-medium">
-                                                        {sDebit > 0 ? sDebit.toFixed(3) : '-'}
+                                                        {sDebit > 0 ? Math.round(sDebit) : '-'}
                                                     </td>
                                                     <td className="p-3 text-right text-green-700 font-medium border-r">
-                                                        {sCredit > 0 ? sCredit.toFixed(3) : '-'}
+                                                        {sCredit > 0 ? Math.round(sCredit) : '-'}
                                                     </td>
                                                     <td className="p-3 text-right font-bold bg-gray-50 border-r">
-                                                        {parseFloat(txn.balanceSilverAfter).toFixed(3)}
+                                                        {Math.round(parseFloat(txn.balanceSilverAfter))}
                                                     </td>
 
                                                     {/* Amount Columns */}

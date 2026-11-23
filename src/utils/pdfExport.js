@@ -30,7 +30,7 @@ export const generateBillPDF = (sale, customer) => {
     parseFloat(item.wastage).toFixed(3),
     item.hihob || '50%',
     parseFloat(item.laborCharges).toFixed(2),
-    parseFloat(item.silverWeight).toFixed(3),
+    Math.round(parseFloat(item.silverWeight)).toString(),
     parseFloat(item.itemAmount).toFixed(2)
   ]);
 
@@ -61,7 +61,7 @@ export const generateBillPDF = (sale, customer) => {
   doc.setFontSize(11);
   doc.text('Total:', 120, finalY);
   doc.setTextColor(255, 140, 0);
-  doc.text(parseFloat(sale.totalSilverWeight).toFixed(3), 160, finalY);
+  doc.text(Math.round(parseFloat(sale.totalSilverWeight)).toString(), 160, finalY);
   doc.setTextColor(0, 128, 0);
   doc.text(parseFloat(sale.totalAmount).toFixed(2), 180, finalY);
 

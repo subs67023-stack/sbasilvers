@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import LoadingScreen from './components/LoadingScreen';
 import Header from './components/layout/Header';
@@ -10,6 +10,7 @@ import CategoryPage from './pages/CategoryPage';
 import ProductDetail from './pages/ProductDetail';
 import SearchPage from './pages/SearchPage';
 import ProtectedRoute from './pages/ProtectedRoute';
+import UnderProgress from './pages/UnderProgress';
 
 // Admin Pages
 import Dashboard from './pages/admin/Dashboard';
@@ -44,6 +45,33 @@ import RegularBullenList from './pages/regular/BullenList';
 import RegularBullenLedger from './pages/regular/BullenLedger';
 import Employee from './pages/regular/Employee';              // ← ADD THIS
 import EmployeeLedger from './pages/regular/EmployeeLedger';
+import PitalKaam from './pages/regular/PitalKaam';
+
+// Redirects visitors based on authentication status & role:
+// - Not logged in -> /login (shows login page directly after loading)
+// - Logged in Admin -> /admin
+// - Logged in Regular User -> /under-progress
+const RootRedirect = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Navigate to="/under-progress" replace />;
+};
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -217,6 +245,22 @@ function App() {
             }
           />
           <Route
+            path="/regular/pital-kaam"
+            element={
+              <ProtectedRoute adminOnly>
+                <PitalKaam />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/regular/production-batch"
+            element={
+              <ProtectedRoute adminOnly>
+                <PitalKaam />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/regular/jama-kharch-silver"
             element={
               <ProtectedRoute adminOnly>
@@ -283,24 +327,45 @@ function App() {
           />
 
 
-          {/* Public Pages */}
+          {/* Root / Default Landing Route */}
+          <Route path="/" element={<RootRedirect />} />
+
+          {/* Under Progress Route for Non-Admin Users */}
           <Route
-            path="*"
+            path="/under-progress"
             element={
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <main className="flex-grow">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/category/:category" element={<CategoryPage />} />
-                    <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/search" element={<SearchPage />} />
-                  </Routes>
-                </main>
-                <Footer />
-              </div>
+              <ProtectedRoute>
+                <UnderProgress />
+              </ProtectedRoute>
             }
           />
+
+          {/* 
+            ========================================================================
+            TEMPORARILY DISABLED STOREFRONT - CODE PRESERVED FOR FUTURE RESTORATION
+            To re-enable the customer storefront pages later, simply restore this route block:
+            ========================================================================
+            <Route
+              path="/store/*"
+              element={
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <main className="flex-grow">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/category/:category" element={<CategoryPage />} />
+                      <Route path="/product/:id" element={<ProductDetail />} />
+                      <Route path="/search" element={<SearchPage />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </div>
+              }
+            />
+          */}
+
+          {/* Catch-all: Redirect unknown routes via RootRedirect */}
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </AuthProvider>
     </Router>
