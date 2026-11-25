@@ -55,11 +55,7 @@ const RootRedirect = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-purple-600"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!user) {
@@ -74,24 +70,6 @@ const RootRedirect = () => {
 };
 
 function App() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const hasSeenLoading = sessionStorage.getItem('hasSeenLoading');
-    if (hasSeenLoading) {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleLoadingComplete = () => {
-    sessionStorage.setItem('hasSeenLoading', 'true');
-    setLoading(false);
-  };
-
-  if (loading) {
-    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
-  }
-
   return (
     <Router>
       <AuthProvider>

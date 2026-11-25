@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
-import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { formatDate } from '../../utils/dateUtils';
 
 const EmployeeList = () => {
@@ -77,20 +78,76 @@ const EmployeeList = () => {
     }
   };
 
-  const exportToExcel = () => {
-    const dataToExport = filteredEmployees.map((emp, index) => ({
-      'No': index + 1,
-      'Name': emp.name,
-      'Date of Join': formatDate(emp.dateOfJoin),
-      'Department': emp.department,
-      'Phone': emp.phoneNumber || '-',
-      'Baki Amount': `₹${parseFloat(emp.bakiAmount).toFixed(2)}`
-    }));
+  const exportToPDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = 8; // Compact raised header
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
-    XLSX.writeFile(workbook, `Employees_${new Date().toISOString().split('T')[0]}.xlsx`);
+    // Header Title
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Employee Directory & Baki Report', 14, yPosition);
+
+    // Subtitle / Date
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${formatDate(new Date())} | Total Employees: ${filteredEmployees.length}`, pageWidth - 14, yPosition, { align: 'right' });
+    doc.setTextColor(0);
+
+    yPosition += 6;
+
+    const totalBaki = filteredEmployees.reduce((sum, emp) => sum + (parseFloat(emp.bakiAmount) || 0), 0);
+
+    const tableData = filteredEmployees.map((emp, index) => [
+      index + 1,
+      emp.name || '-',
+      formatDate(emp.dateOfJoin),
+      emp.department || '-',
+      emp.phoneNumber || '-',
+      `Rs. ${parseFloat(emp.bakiAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    ]);
+
+    // Total summary row
+    tableData.push([
+      'Total',
+      `Count: ${filteredEmployees.length}`,
+      '',
+      '',
+      '',
+      `Rs. ${totalBaki.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [['#', 'Employee Name', 'Date of Join', 'Department', 'Phone', 'Baki Amount']],
+      body: tableData,
+      styles: {
+        fontSize: 8.5,
+        cellPadding: 2,
+        overflow: 'linebreak'
+      },
+      headStyles: {
+        fillColor: [37, 99, 235], // Blue
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'left'
+      },
+      columnStyles: {
+        0: { cellWidth: 12, halign: 'center' },
+        1: { cellWidth: 48 },
+        2: { cellWidth: 30, halign: 'center' },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 32, halign: 'right', fontStyle: 'bold' }
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      margin: { left: 12, right: 12 }
+    });
+
+    doc.save(`Employee_List_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const filteredEmployees = employees.filter(emp =>
@@ -104,10 +161,10 @@ const EmployeeList = () => {
         <h3 className="text-xl font-semibold">Employee List</h3>
         <div className="flex gap-3">
           <button
-            onClick={exportToExcel}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+            onClick={exportToPDF}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 font-semibold shadow-sm transition-all"
           >
-            📊 Export
+            📄 Export PDF
           </button>
           <button
             onClick={() => setShowForm(!showForm)}

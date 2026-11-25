@@ -26,13 +26,13 @@ const isToday = (dateStr) => {
   return String(dateStr).split('T')[0] === getTodayDate();
 };
 
-const sortTransactions = (items) => {
+const sortTransactions = (items, order = 'desc') => {
   return [...items].sort((a, b) => {
     const dateA = a.date ? String(a.date).split('T')[0] : '';
     const dateB = b.date ? String(b.date).split('T')[0] : '';
-    const cmp = dateB.localeCompare(dateA);
+    const cmp = order === 'asc' ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
     if (cmp !== 0) return cmp;
-    return (b.id || 0) - (a.id || 0);
+    return order === 'asc' ? (a.id || 0) - (b.id || 0) : (b.id || 0) - (a.id || 0);
   });
 };
 
@@ -41,6 +41,7 @@ const JamaKharchCash = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateSortOrder, setDateSortOrder] = useState('desc'); // 'desc' = latest first, 'asc' = oldest first
   const [filteredTransactions, setFilteredTransactions] = useState([]);
 
   // Form State
@@ -74,20 +75,19 @@ const JamaKharchCash = () => {
   }, [activeTab]);
 
   useEffect(() => {
+    let result = transactions;
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      const filtered = transactions.filter(txn =>
+      result = transactions.filter(txn =>
         (txn.name && txn.name.toLowerCase().includes(lower)) ||
         (txn.description && txn.description.toLowerCase().includes(lower)) ||
         (txn.date && txn.date.includes(searchTerm)) ||
         formatDate(txn.date).includes(searchTerm) ||
         (txn.amount && String(txn.amount).includes(searchTerm))
       );
-      setFilteredTransactions(sortTransactions(filtered));
-    } else {
-      setFilteredTransactions(sortTransactions(transactions));
     }
-  }, [searchTerm, transactions]);
+    setFilteredTransactions(sortTransactions(result, dateSortOrder));
+  }, [searchTerm, transactions, dateSortOrder]);
 
   // Overall KPI fetch
   const fetchOverallAnalysis = async () => {
@@ -430,13 +430,21 @@ const JamaKharchCash = () => {
 
             {/* Transaction History Table */}
             <div>
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
                 <h3 className="text-base font-bold text-gray-800">
                   Transaction List ({filteredTransactions.length})
                 </h3>
-                <span className="text-xs text-gray-500">
-                  Sorted by date (Latest / Today on top)
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">Sort by Date:</span>
+                  <button
+                    type="button"
+                    onClick={() => setDateSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    className="px-3 py-1 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Click to toggle Date sort order"
+                  >
+                    <span>{dateSortOrder === 'desc' ? '📅 Newest First ⬇️' : '📅 Oldest First ⬆️'}</span>
+                  </button>
+                </div>
               </div>
 
               {loading ? (
@@ -449,7 +457,18 @@ const JamaKharchCash = () => {
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="bg-gray-100 text-gray-700 font-bold border-b">
-                        <th className="p-3 text-left">Date</th>
+                        <th
+                          onClick={() => setDateSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                          className="p-3 text-left cursor-pointer hover:bg-gray-200 transition-colors select-none group"
+                          title="Click to toggle Date sort (Newest / Oldest)"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span>Date</span>
+                            <span className="text-blue-600 font-bold text-xs">
+                              {dateSortOrder === 'desc' ? '▼' : '▲'}
+                            </span>
+                          </div>
+                        </th>
                         {activeTab === 'ALL' && <th className="p-3 text-left">Type</th>}
                         <th className="p-3 text-left">Amount (₹)</th>
                         <th className="p-3 text-left">Name</th>

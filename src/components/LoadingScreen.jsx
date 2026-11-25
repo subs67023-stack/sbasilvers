@@ -1,79 +1,57 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 
-const LoadingScreen = ({ onLoadingComplete }) => {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const duration = 5000;
-    const intervalTime = 50;
-    const steps = duration / intervalTime;
-    const increment = 100 / steps;
-
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const newProgress = prev + increment;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(onLoadingComplete, 300);
-          return 100;
-        }
-        return newProgress;
-      });
-    }, intervalTime);
-
-    return () => clearInterval(interval);
-  }, [onLoadingComplete]);
-
+const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-secondary-dark via-gray-900 to-black">
-      {/* 60% - Background with pattern */}
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: 'url(/pattern-bg.jpg)',
-          backgroundSize: 'cover',
-        }}
-      ></div>
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-gray-900 to-black text-white px-4 select-none">
+      {/* Background ambient lighting */}
+      <div className="absolute w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -bottom-10 -right-10"></div>
 
-      {/* Animated particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="particle particle-1"></div>
-        <div className="particle particle-2"></div>
-        <div className="particle particle-3"></div>
-        <div className="particle particle-4"></div>
-        <div className="particle particle-5"></div>
-      </div>
+      <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
+        {/* Animated Silver Dual Rings with Diamond */}
+        <div className="relative flex items-center justify-center w-28 h-28 mb-6">
+          {/* Outer Pulsing Glow */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-500/20 via-blue-500/30 to-purple-500/20 blur-md animate-pulse"></div>
 
-      <div className="relative z-10 text-center px-4">
-        {/* Logo - 10% accent with glow */}
-        <div className="mb-8 animate-bounce-slow">
-          <img
-            src="/SBA2.jpg"
-            alt="SBA Logo"
-            className="h-32 w-auto mx-auto mb-4 object-contain filter drop-shadow-glow"
-          />
-          <p className="text-2xl text-gray-300 animate-slide-up">Silver Grace Jewelry</p>
-        </div>
+          {/* Outer Rotating Metallic Ring */}
+          <div
+            className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400 border-r-blue-400/50 border-b-transparent border-l-cyan-300 animate-spin"
+            style={{ animationDuration: '2s' }}
+          ></div>
 
-        {/* Loading Bar - 60% container, 10% accent fill */}
-        <div className="w-80 max-w-full mx-auto animate-scale-in">
-          <div className="h-3 bg-secondary-gray/30 rounded-full overflow-hidden shadow-inner">
-            <div
-              className="h-full bg-gradient-to-r from-accent-blue via-accent-purple to-accent-blue bg-[length:200%_100%] transition-all duration-300 ease-out animate-gradient"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between mt-3 text-sm">
-            <span className="text-gray-400">Loading your experience...</span>
-            <span className="text-white font-bold">{Math.round(progress)}%</span>
+          {/* Inner Counter-Rotating Ring */}
+          <div
+            className="absolute inset-2.5 rounded-full border-2 border-transparent border-b-purple-400 border-l-pink-400/60 border-t-transparent border-r-purple-300 animate-spin"
+            style={{ animationDuration: '3s', animationDirection: 'reverse' }}
+          ></div>
+
+          {/* Center Jewel Icon */}
+          <div className="relative text-3xl select-none filter drop-shadow-[0_0_14px_rgba(59,130,246,0.7)] animate-bounce-slow">
+            💎
           </div>
         </div>
 
-        {/* Sparkle Effect - 10% accent */}
-        <div className="mt-8 flex justify-center space-x-3">
-          <span className="w-3 h-3 bg-accent-blue rounded-full animate-ping"></span>
-          <span className="w-3 h-3 bg-accent-purple rounded-full animate-ping" style={{ animationDelay: '0.2s' }}></span>
-          <span className="w-3 h-3 bg-accent-green rounded-full animate-ping" style={{ animationDelay: '0.4s' }}></span>
+        {/* Brand Name */}
+        <h1 className="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-cyan-200 to-gray-300 uppercase mb-1">
+          SBA SILVERS
+        </h1>
+        <p className="text-xs font-medium tracking-wider text-gray-400 uppercase mb-5">
+          Shree Basaveshwar Agarbatti & Silvers
+        </p>
+
+        {/* Minimalist Shimmer Bar */}
+        <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden shadow-inner relative">
+          <div className="absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
+        </div>
+
+        {/* Loading text with animated dots */}
+        <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-400 tracking-wide">
+          <span>Loading</span>
+          <span className="inline-flex">
+            <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+            <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+            <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+          </span>
         </div>
       </div>
     </div>
