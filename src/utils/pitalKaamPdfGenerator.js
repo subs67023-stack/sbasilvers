@@ -220,20 +220,45 @@ export const generateVeekhariPDF = (entry) => {
 
     yPos += boxH + 3;
 
-    // Table (ONLY weight, rate, total. NO taken rate, NO profit!)
-    const kg = parseFloat(entry.kg || 0);
-    const rate = parseFloat(entry.ratePerKg || 0);
-    const total = parseFloat(entry.total || (kg * rate));
+    // Table (ONLY product name, weight, rate, total. NO taken rate, NO profit!)
+    const items = (entry.items && Array.isArray(entry.items) && entry.items.length > 0)
+      ? entry.items
+      : [{
+          productName: 'Pital (Brass) Material',
+          kg: parseFloat(entry.kg || 0),
+          ratePerKg: parseFloat(entry.ratePerKg || 0),
+          total: parseFloat(entry.total || 0)
+        }];
 
-    const tableData = [
-      [
-        '1',
-        'Pital (Brass) Material',
-        `${kg.toFixed(3)} kg`,
-        `Rs. ${rate.toFixed(2)}`,
-        `Rs. ${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      ]
-    ];
+    let sumKg = 0;
+    let sumTotal = 0;
+
+    const tableData = items.map((it, idx) => {
+      const itKg = parseFloat(it.kg || 0);
+      const itRate = parseFloat(it.ratePerKg || 0);
+      const itTotal = parseFloat(it.total !== undefined ? it.total : (itKg * itRate));
+      sumKg += itKg;
+      sumTotal += itTotal;
+      return [
+        String(idx + 1),
+        it.productName || 'Pital Material',
+        `${itKg.toFixed(3)} kg`,
+        `Rs. ${itRate.toFixed(2)}`,
+        `Rs. ${itTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      ];
+    });
+
+    if (items.length > 1) {
+      tableData.push([
+        'Total',
+        'Grand Total',
+        `${sumKg.toFixed(3)} kg`,
+        '',
+        `Rs. ${sumTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      ]);
+    }
+
+    const finalTotal = sumTotal > 0 ? sumTotal : (parseFloat(entry.total) || 0);
 
     autoTable(doc, {
       startY: yPos,
@@ -258,6 +283,12 @@ export const generateVeekhariPDF = (entry) => {
         2: { halign: 'right', cellWidth: 26 },
         3: { halign: 'right', cellWidth: 26 },
         4: { halign: 'right', fontStyle: 'bold', cellWidth: 32 }
+      },
+      didParseCell: (data) => {
+        if (items.length > 1 && data.row.index === tableData.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [240, 243, 246];
+        }
       }
     });
 
@@ -269,7 +300,7 @@ export const generateVeekhariPDF = (entry) => {
     doc.setTextColor(50);
     let words = '';
     try {
-      words = numberToWords ? numberToWords(Math.round(total)) : '';
+      words = numberToWords ? numberToWords(Math.round(finalTotal)) : '';
     } catch (e) {
       words = '';
     }

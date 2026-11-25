@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { generateCustomerLedgerPDF, generateKharediPDF, generateVeekhariPDF } from '../../utils/pitalKaamPdfGenerator';
+import { formatDate } from '../../utils/dateUtils';
 
 export default function PitalCustomerLedgerModal({ customerName, customerType = 'kharedi', onClose }) {
   const [loading, setLoading] = useState(true);
@@ -124,7 +125,7 @@ export default function PitalCustomerLedgerModal({ customerName, customerType = 
                   entries.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50 transition">
                       <td className="py-2 px-3 text-gray-700 whitespace-nowrap">
-                        {new Date(item.date).toLocaleDateString('en-GB')}
+                        {formatDate(item.date)}
                       </td>
                       <td className="py-2 px-3 font-semibold text-gray-900">
                         {item.billNo}

@@ -3,6 +3,7 @@ import RegularDashboard from './RegularDashboard';
 import api from '../../utils/api';
 import { generateKharediPDF, generateVeekhariPDF } from '../../utils/pitalKaamPdfGenerator';
 import PitalCustomerLedgerModal from '../../components/regularBilling/PitalCustomerLedgerModal';
+import { formatDate } from '../../utils/dateUtils';
 
 export default function PitalKaam() {
   const [activeTab, setActiveTab] = useState('kharedi'); // 'kharedi' | 'veekhari' | 'analysis' | 'customers'
@@ -31,10 +32,10 @@ export default function PitalKaam() {
     id: null,
     date: new Date().toISOString().split('T')[0],
     name: '',
-    kg: '',
-    ratePerKg: '',
-    total: '',
-    takenRatePerKg: '', // internal taken rate per kg
+    items: [
+      { productName: '', kg: '', ratePerKg: '', total: '' }
+    ],
+    takenRatePerKg: '', // internal taken rate per kg - added ONLY ONCE
     notes: ''
   });
   const [veekhariList, setVeekhariList] = useState([]);
@@ -145,14 +146,60 @@ export default function PitalKaam() {
     }
   }, [kharediForm.kg, kharediForm.ratePerKg]);
 
-  // Auto calculate total for Veekhari
-  useEffect(() => {
-    const kg = parseFloat(veekhariForm.kg) || 0;
-    const rate = parseFloat(veekhariForm.ratePerKg) || 0;
-    if (kg > 0 && rate > 0) {
-      setVeekhariForm(prev => ({ ...prev, total: (kg * rate).toFixed(2) }));
-    }
-  }, [veekhariForm.kg, veekhariForm.ratePerKg]);
+  // Veekhari Multi-Product Helpers
+  const handleVeekhariItemChange = (index, field, value) => {
+    setVeekhariForm(prev => {
+      const newItems = [...prev.items];
+      const item = { ...newItems[index], [field]: value };
+      if (field === 'kg' || field === 'ratePerKg') {
+        const kgVal = parseFloat(field === 'kg' ? value : item.kg) || 0;
+        const rateVal = parseFloat(field === 'ratePerKg' ? value : item.ratePerKg) || 0;
+        item.total = kgVal > 0 && rateVal > 0 ? (kgVal * rateVal).toFixed(2) : '';
+      }
+      newItems[index] = item;
+      return { ...prev, items: newItems };
+    });
+  };
+
+  const addVeekhariItem = () => {
+    setVeekhariForm(prev => ({
+      ...prev,
+      items: [...prev.items, { productName: '', kg: '', ratePerKg: '', total: '' }]
+    }));
+  };
+
+  const removeVeekhariItem = (index) => {
+    if (veekhariForm.items.length <= 1) return;
+    setVeekhariForm(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const getVeekhariTotals = () => {
+    let totalKg = 0;
+    let totalAmount = 0;
+    (veekhariForm.items || []).forEach(it => {
+      const kg = parseFloat(it.kg) || 0;
+      const rate = parseFloat(it.ratePerKg) || 0;
+      const tot = parseFloat(it.total) || (kg * rate);
+      totalKg += kg;
+      totalAmount += tot;
+    });
+
+    const takenRate = parseFloat(veekhariForm.takenRatePerKg) || 0;
+    const costAmount = takenRate > 0 ? totalKg * takenRate : null;
+    const profit = costAmount !== null ? totalAmount - costAmount : null;
+    const avgRate = totalKg > 0 ? totalAmount / totalKg : 0;
+
+    return {
+      totalKg: Number(totalKg.toFixed(3)),
+      totalAmount: Number(totalAmount.toFixed(2)),
+      avgRate: Number(avgRate.toFixed(2)),
+      costAmount: costAmount !== null ? Number(costAmount.toFixed(2)) : null,
+      profit: profit !== null ? Number(profit.toFixed(2)) : null
+    };
+  };
 
   // Handle Kharedi Submit (Save & generate PDF)
   const handleKharediSubmit = async (e) => {
@@ -207,7 +254,7 @@ export default function PitalKaam() {
     }
   };
 
-  // Handle Veekhari Submit (Save & generate PDF - WITHOUT taken rate on PDF, WITHOUT type)
+  // Handle Veekhari Submit (Save & generate PDF with multiple products, taken rate added ONCE)
   const handleVeekhariSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -215,25 +262,58 @@ export default function PitalKaam() {
       alert('Please enter or select Customer Name');
       return;
     }
-    const kg = parseFloat(veekhariForm.kg);
-    const rate = parseFloat(veekhariForm.ratePerKg);
-    if (!kg || kg <= 0 || !rate || rate <= 0) {
-      alert('Please enter valid Weight (kg) and Rate/kg');
+
+    if (!veekhariForm.items || veekhariForm.items.length === 0) {
+      alert('Please add at least one product');
       return;
     }
 
+    for (let i = 0; i < veekhariForm.items.length; i++) {
+      const it = veekhariForm.items[i];
+      if (!it.productName || !it.productName.trim()) {
+        alert(`Please enter Product Name for item #${i + 1}`);
+        return;
+      }
+      const itKg = parseFloat(it.kg);
+      const itRate = parseFloat(it.ratePerKg);
+      if (!itKg || itKg <= 0 || !itRate || itRate <= 0) {
+        alert(`Please enter valid Weight (kg) and Sale Rate for item #${i + 1} (${it.productName})`);
+        return;
+      }
+    }
+
+    const totals = getVeekhariTotals();
+
     try {
       setLoading(true);
+      const payload = {
+        date: veekhariForm.date,
+        name: veekhariForm.name.trim(),
+        kg: totals.totalKg,
+        ratePerKg: totals.avgRate,
+        total: totals.totalAmount,
+        takenRatePerKg: veekhariForm.takenRatePerKg !== '' && veekhariForm.takenRatePerKg !== null
+          ? parseFloat(veekhariForm.takenRatePerKg)
+          : null,
+        notes: veekhariForm.notes,
+        items: veekhariForm.items.map(it => ({
+          productName: it.productName.trim(),
+          kg: parseFloat(it.kg),
+          ratePerKg: parseFloat(it.ratePerKg),
+          total: parseFloat(it.total) || (parseFloat(it.kg) * parseFloat(it.ratePerKg))
+        }))
+      };
+
       let res;
       if (veekhariForm.id) {
-        res = await api.put(`/pital-kaam/${veekhariForm.id}`, veekhariForm);
+        res = await api.put(`/pital-kaam/${veekhariForm.id}`, payload);
       } else {
-        res = await api.post('/pital-kaam/veekhari', veekhariForm);
+        res = await api.post('/pital-kaam/veekhari', payload);
       }
 
       if (res.data.success) {
         const savedEntry = res.data.data;
-        // Generate PDF right after save (NO taken rate, NO type in PDF)
+        // Generate PDF right after save (NO taken rate on PDF, with all multiple products!)
         generateVeekhariPDF(savedEntry);
 
         alert(veekhariForm.id ? 'Veekhari entry updated successfully!' : 'Veekhari entry saved & Customer Bill PDF generated!');
@@ -241,9 +321,7 @@ export default function PitalKaam() {
           id: null,
           date: new Date().toISOString().split('T')[0],
           name: '',
-          kg: '',
-          ratePerKg: '',
-          total: '',
+          items: [{ productName: '', kg: '', ratePerKg: '', total: '' }],
           takenRatePerKg: '',
           notes: ''
         });
@@ -565,7 +643,7 @@ export default function PitalKaam() {
                         <tr key={entry.id} className="hover:bg-amber-50/40 transition">
                           <td className="py-2.5 px-3 font-semibold text-amber-900">{entry.billNo}</td>
                           <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">
-                            {new Date(entry.date).toLocaleDateString('en-GB')}
+                            {formatDate(entry.date)}
                           </td>
                           <td className="py-2.5 px-3 font-bold text-gray-900">{entry.name}</td>
                           <td className="py-2.5 px-3 text-right font-medium text-gray-900">
@@ -677,9 +755,7 @@ export default function PitalKaam() {
                       id: null,
                       date: new Date().toISOString().split('T')[0],
                       name: '',
-                      kg: '',
-                      ratePerKg: '',
-                      total: '',
+                      items: [{ productName: '', kg: '', ratePerKg: '', total: '' }],
                       takenRatePerKg: '',
                       notes: ''
                     })}
@@ -691,7 +767,8 @@ export default function PitalKaam() {
               </div>
 
               <form onSubmit={handleVeekhariSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
+                {/* Row 1: Date, Customer Name, Notes */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* Date */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -706,7 +783,7 @@ export default function PitalKaam() {
                     />
                   </div>
 
-                  {/* Name with Veekhari-Only Auto-Suggest */}
+                  {/* Customer Name with Veekhari-Only Auto-Suggest */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
                       Customer Name <span className="text-red-500">*</span>
@@ -728,80 +805,180 @@ export default function PitalKaam() {
                     <p className="text-[10px] text-emerald-700 font-medium mt-0.5">Veekhari buyer names only</p>
                   </div>
 
-                  {/* Weight (kg) */}
+                  {/* Notes / Remarks */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Weight (kg) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="e.g. 5.500"
-                      value={veekhariForm.kg}
-                      onChange={(e) => setVeekhariForm({ ...veekhariForm, kg: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  {/* Selling Rate / kg */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Sale Rate / kg (₹) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="e.g. 750"
-                      value={veekhariForm.ratePerKg}
-                      onChange={(e) => setVeekhariForm({ ...veekhariForm, ratePerKg: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  {/* Total (kg * rate) */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Total Sale Amount (₹)
+                      Notes / Remarks (Optional)
                     </label>
                     <input
                       type="text"
-                      readOnly
-                      placeholder="Auto total"
-                      value={veekhariForm.total ? `₹${veekhariForm.total}` : '₹0.00'}
-                      className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-xl text-xs font-bold text-emerald-900 outline-none"
+                      placeholder="e.g. Delivery terms, payment note..."
+                      value={veekhariForm.notes}
+                      onChange={(e) => setVeekhariForm({ ...veekhariForm, notes: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500"
                     />
-                  </div>
-
-                  {/* Taken Rate / kg (Internal Cost) */}
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-700 mb-1">
-                      Taken Rate / kg (₹) <span className="text-[10px] text-gray-400 font-normal">(Internal)</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="Cost rate e.g. 600"
-                      value={veekhariForm.takenRatePerKg}
-                      onChange={(e) => setVeekhariForm({ ...veekhariForm, takenRatePerKg: e.target.value })}
-                      className="w-full px-3 py-2 border border-purple-200 bg-purple-50/50 rounded-xl text-xs font-semibold text-purple-900 outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <p className="text-[10px] text-purple-600 font-medium mt-0.5">Not mentioned on customer PDF</p>
                   </div>
                 </div>
 
-                {/* Live Profit Preview Box */}
-                {veekhariForm.takenRatePerKg && veekhariForm.kg && veekhariForm.ratePerKg && (
-                  <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 flex flex-wrap justify-between items-center text-xs">
-                    <span className="text-emerald-900 font-medium">
-                      Profit Preview: Sale (₹{veekhariForm.total}) − Cost (₹{(parseFloat(veekhariForm.kg) * parseFloat(veekhariForm.takenRatePerKg)).toFixed(2)})
-                    </span>
-                    <span className="font-bold text-emerald-800 text-sm">
-                      = Net Profit: +₹{((parseFloat(veekhariForm.ratePerKg) - parseFloat(veekhariForm.takenRatePerKg)) * parseFloat(veekhariForm.kg)).toFixed(2)}
-                    </span>
+                {/* Multiple Products / Items Section */}
+                <div className="border border-emerald-200/70 rounded-xl p-4 bg-emerald-50/25 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-800 font-bold text-xs uppercase tracking-wide">📦 Products / Items</span>
+                      <span className="text-[11px] text-gray-500">
+                        ({veekhariForm.items.length} {veekhariForm.items.length === 1 ? 'item' : 'items'})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addVeekhariItem}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center gap-1.5"
+                    >
+                      <span>+</span>
+                      <span>Add Product</span>
+                    </button>
                   </div>
-                )}
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-xs">
+                      <thead>
+                        <tr className="text-gray-600 border-b border-emerald-200/60">
+                          <th className="text-center w-8 pb-2">#</th>
+                          <th className="text-left pb-2">Product Name <span className="text-red-500">*</span></th>
+                          <th className="text-right w-32 pb-2">Weight (kg) <span className="text-red-500">*</span></th>
+                          <th className="text-right w-32 pb-2">Sale Rate / kg (₹) <span className="text-red-500">*</span></th>
+                          <th className="text-right w-36 pb-2">Total Amount (₹)</th>
+                          <th className="text-center w-12 pb-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {veekhariForm.items.map((item, idx) => (
+                          <tr key={idx} className="border-b border-gray-100 last:border-b-0">
+                            <td className="text-center font-bold text-gray-400 py-1.5">{idx + 1}</td>
+                            <td className="py-1.5 pr-2">
+                              <input
+                                type="text"
+                                required
+                                placeholder="e.g. Pital Murti, Pital Plate, Pital Scrap..."
+                                value={item.productName}
+                                onChange={(e) => handleVeekhariItemChange(idx, 'productName', e.target.value)}
+                                className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 bg-white"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              <input
+                                type="number"
+                                step="any"
+                                required
+                                placeholder="0.000"
+                                value={item.kg}
+                                onChange={(e) => handleVeekhariItemChange(idx, 'kg', e.target.value)}
+                                className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-right focus:ring-2 focus:ring-emerald-500 bg-white"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              <input
+                                type="number"
+                                step="any"
+                                required
+                                placeholder="₹ / kg"
+                                value={item.ratePerKg}
+                                onChange={(e) => handleVeekhariItemChange(idx, 'ratePerKg', e.target.value)}
+                                className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-right focus:ring-2 focus:ring-emerald-500 bg-white"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              <input
+                                type="text"
+                                readOnly
+                                value={item.total ? `₹${item.total}` : '₹0.00'}
+                                className="w-full px-2.5 py-1.5 bg-gray-100 border border-gray-200 rounded-lg text-xs font-bold text-emerald-900 text-right cursor-not-allowed"
+                              />
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {veekhariForm.items.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeVeekhariItem(idx)}
+                                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition"
+                                  title="Remove product"
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Overall Bill Summary & Single Taken Rate (Applied Only Once) */}
+                {(() => {
+                  const totals = getVeekhariTotals();
+                  return (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Total Weight (kg)
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={`${totals.totalKg.toFixed(3)} kg`}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-900 outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">
+                            Total Sale Amount (₹)
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={`₹${totals.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-black text-emerald-900 outline-none"
+                          />
+                        </div>
+
+                        {/* Taken Rate / kg (Single Input - Added Only Once!) */}
+                        <div className="md:col-span-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-bold text-purple-700">
+                              Taken Rate / kg (₹) <span className="text-[10px] text-purple-600 font-normal">(Internal Cost — Added Only Once)</span>
+                            </label>
+                            <span className="text-[10px] text-gray-500 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                              Not printed on Customer PDF
+                            </span>
+                          </div>
+                          <input
+                            type="number"
+                            step="any"
+                            placeholder="Enter cost rate e.g. 600 (applies to all products in this bill)"
+                            value={veekhariForm.takenRatePerKg}
+                            onChange={(e) => setVeekhariForm({ ...veekhariForm, takenRatePerKg: e.target.value })}
+                            className="w-full px-3 py-2 border border-purple-300 bg-purple-50/50 rounded-xl text-xs font-bold text-purple-900 outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Profit Preview */}
+                      {totals.costAmount !== null && (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex flex-wrap justify-between items-center text-xs">
+                          <span className="text-emerald-900 font-medium">
+                            Profit Calculation: Sale (₹{totals.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}) − Cost (₹{totals.costAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })})
+                          </span>
+                          <span className="font-black text-emerald-800 text-sm">
+                            = Net Profit: +₹{totals.profit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Submit & PDF Button */}
                 <div className="flex justify-end gap-3 pt-2">
@@ -845,9 +1022,10 @@ export default function PitalKaam() {
                       <th className="py-2.5 px-3 text-left">Bill No.</th>
                       <th className="py-2.5 px-3 text-left">Date</th>
                       <th className="py-2.5 px-3 text-left">Customer Name</th>
-                      <th className="py-2.5 px-3 text-right">Weight (kg)</th>
-                      <th className="py-2.5 px-3 text-right">Sale Rate (₹)</th>
-                      <th className="py-2.5 px-3 text-right">Total (₹)</th>
+                      <th className="py-2.5 px-3 text-left">Products</th>
+                      <th className="py-2.5 px-3 text-right">Total Wt (kg)</th>
+                      <th className="py-2.5 px-3 text-right">Avg Rate (₹)</th>
+                      <th className="py-2.5 px-3 text-right">Total Sale (₹)</th>
                       <th className="py-2.5 px-3 text-right text-purple-800">Taken Rate (₹)</th>
                       <th className="py-2.5 px-3 text-right text-green-700">Profit (₹)</th>
                       <th className="py-2.5 px-3 text-center">Actions</th>
@@ -859,9 +1037,22 @@ export default function PitalKaam() {
                         <tr key={entry.id} className="hover:bg-emerald-50/40 transition">
                           <td className="py-2.5 px-3 font-semibold text-emerald-900">{entry.billNo}</td>
                           <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">
-                            {new Date(entry.date).toLocaleDateString('en-GB')}
+                            {formatDate(entry.date)}
                           </td>
                           <td className="py-2.5 px-3 font-bold text-gray-900">{entry.name}</td>
+                          <td className="py-2.5 px-3">
+                            {entry.items && Array.isArray(entry.items) && entry.items.length > 0 ? (
+                              <div className="space-y-0.5">
+                                {entry.items.map((it, idx) => (
+                                  <div key={idx} className="text-[11px] text-gray-700 whitespace-nowrap">
+                                    <span className="font-semibold text-gray-900">{it.productName || 'Pital'}</span>: {parseFloat(it.kg).toFixed(3)}kg @ ₹{parseFloat(it.ratePerKg).toFixed(2)}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 text-[11px]">Pital Material</span>
+                            )}
+                          </td>
                           <td className="py-2.5 px-3 text-right font-medium text-gray-900">
                             {parseFloat(entry.kg).toFixed(3)} kg
                           </td>
@@ -888,14 +1079,29 @@ export default function PitalKaam() {
                               </button>
                               <button
                                 onClick={() => {
+                                  let loadedItems = [];
+                                  if (entry.items && Array.isArray(entry.items) && entry.items.length > 0) {
+                                    loadedItems = entry.items.map(it => ({
+                                      productName: it.productName || 'Pital Material',
+                                      kg: it.kg || '',
+                                      ratePerKg: it.ratePerKg || '',
+                                      total: it.total || ''
+                                    }));
+                                  } else {
+                                    loadedItems = [{
+                                      productName: 'Pital Material',
+                                      kg: entry.kg || '',
+                                      ratePerKg: entry.ratePerKg || '',
+                                      total: entry.total || ''
+                                    }];
+                                  }
+
                                   setVeekhariForm({
                                     id: entry.id,
                                     date: entry.date,
                                     name: entry.name,
-                                    kg: entry.kg,
-                                    ratePerKg: entry.ratePerKg,
-                                    total: entry.total,
-                                    takenRatePerKg: entry.takenRatePerKg || '',
+                                    items: loadedItems,
+                                    takenRatePerKg: entry.takenRatePerKg !== null && entry.takenRatePerKg !== undefined ? entry.takenRatePerKg : '',
                                     notes: entry.notes || ''
                                   });
                                   window.scrollTo({ top: 120, behavior: 'smooth' });
@@ -918,7 +1124,7 @@ export default function PitalKaam() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="9" className="py-8 text-center text-gray-500">
+                        <td colSpan="10" className="py-8 text-center text-gray-500">
                           No Veekhari entries recorded yet.
                         </td>
                       </tr>
@@ -1195,7 +1401,7 @@ export default function PitalKaam() {
                             ₹{party.avgRate.toFixed(2)}
                           </td>
                           <td className="py-3 px-3 text-center text-gray-500 whitespace-nowrap">
-                            {new Date(party.lastDate).toLocaleDateString('en-GB')}
+                            {formatDate(party.lastDate)}
                           </td>
                           <td className="py-3 px-3 text-center">
                             <button
@@ -1258,7 +1464,7 @@ export default function PitalKaam() {
                             +₹{cust.totalProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </td>
                           <td className="py-3 px-3 text-center text-gray-500 whitespace-nowrap">
-                            {new Date(cust.lastDate).toLocaleDateString('en-GB')}
+                            {formatDate(cust.lastDate)}
                           </td>
                           <td className="py-3 px-3 text-center">
                             <button
