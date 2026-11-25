@@ -80,7 +80,7 @@ export const generatePDF = (sale) => {
       tableBody.push([
         idx + 1,
         item.description || '-',
-        '-', // Stamp column (placeholder matching Regular design)
+        item.stamp || '-', // Stamp column
         item.pieces || 1,
         gross.toFixed(3),
         stone.toFixed(3),

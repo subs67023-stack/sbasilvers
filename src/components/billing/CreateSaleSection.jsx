@@ -33,7 +33,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
       wastage: 0,
       touch: 92.50,
       laborRatePerKg: 1000,
-      stamp: '-'
+      stamp: '92.5'
     }
   ]);
 
@@ -138,17 +138,19 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
         }
 
         const stockGross = parseFloat(product.grossWeight || 0);
-        const stockNet = parseFloat(product.netWeight || 0);
+        const totalStone = parseFloat(product.stoneWeight !== undefined && product.stoneWeight !== null ? product.stoneWeight : ((product.perPieceWeight || 0) * (stockPcs || 1)));
 
         if (stockPcs > 0 && inputPcs > 0) {
           const avgGross = stockGross / stockPcs;
+          const avgStone = totalStone / stockPcs;
 
-          updatedItems[index].grossWeight = (avgGross * inputPcs).toFixed(3);
+          const gross = avgGross * inputPcs;
+          const stone = avgStone * inputPcs;
+          const net = Math.max(0, gross - stone);
 
-          const deductionPerPc = parseFloat(product.perPieceWeight || 0);
-          updatedItems[index].stoneWeight = (deductionPerPc * inputPcs).toFixed(3);
-
-          updatedItems[index].netWeight = ((avgGross * inputPcs) - (deductionPerPc * inputPcs)).toFixed(3);
+          updatedItems[index].grossWeight = gross.toFixed(3);
+          updatedItems[index].stoneWeight = stone.toFixed(3);
+          updatedItems[index].netWeight = net.toFixed(3);
         }
       }
     }
@@ -156,7 +158,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
     if (field === 'grossWeight' || field === 'stoneWeight') {
       const gross = parseFloat(updatedItems[index].grossWeight) || 0;
       const stone = parseFloat(updatedItems[index].stoneWeight) || 0;
-      updatedItems[index].netWeight = (gross - stone).toFixed(3);
+      updatedItems[index].netWeight = Math.max(0, gross - stone).toFixed(3);
     }
     setItems(updatedItems);
   };
@@ -168,25 +170,34 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
 
     if (product) {
       updatedItems[index].description = product.name;
+      updatedItems[index].stamp = product.stamp || '92.5';
+      updatedItems[index].touch = product.touch;
+      updatedItems[index].wastage = 0;
 
       const stockPcs = parseInt(product.pieces || 1);
       const inputPcs = parseFloat(updatedItems[index].pieces || 1);
 
       if (stockPcs > 0) {
         const avgGross = parseFloat(product.grossWeight) / stockPcs;
-        const deductionPerPc = parseFloat(product.perPieceWeight || 0);
+        const totalStone = parseFloat(product.stoneWeight !== undefined && product.stoneWeight !== null ? product.stoneWeight : ((product.perPieceWeight || 0) * stockPcs));
+        const avgStone = totalStone / stockPcs;
 
-        updatedItems[index].grossWeight = (avgGross * inputPcs).toFixed(3);
-        updatedItems[index].stoneWeight = (deductionPerPc * inputPcs).toFixed(3);
-        updatedItems[index].netWeight = ((avgGross * inputPcs) - (deductionPerPc * inputPcs)).toFixed(3);
+        const gross = avgGross * inputPcs;
+        const stone = avgStone * inputPcs;
+        const net = Math.max(0, gross - stone);
+
+        updatedItems[index].grossWeight = gross.toFixed(3);
+        updatedItems[index].stoneWeight = stone.toFixed(3);
+        updatedItems[index].netWeight = net.toFixed(3);
       } else {
-        // Fallback if pieces is 0 (shouldn't happen for valid stock)
-        updatedItems[index].grossWeight = product.grossWeight;
-        updatedItems[index].netWeight = product.netWeight;
+        // Fallback if pieces is 0
+        const gross = parseFloat(product.grossWeight || 0);
+        const stone = parseFloat(product.stoneWeight !== undefined && product.stoneWeight !== null ? product.stoneWeight : (product.perPieceWeight || 0));
+        const net = Math.max(0, gross - stone);
+        updatedItems[index].grossWeight = gross.toFixed(3);
+        updatedItems[index].stoneWeight = stone.toFixed(3);
+        updatedItems[index].netWeight = net.toFixed(3);
       }
-
-      updatedItems[index].touch = product.touch;
-      updatedItems[index].wastage = 0;
     }
     setItems(updatedItems);
   };
@@ -202,7 +213,7 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
       wastage: 0,
       touch: 92.50,
       laborRatePerKg: 1000,
-      stamp: '-'
+      stamp: '92.5'
     }]);
   };
 
@@ -518,11 +529,10 @@ export default function CreateSaleSection({ onSaleCreated, onCancel }) {
                   TOTAL
                 </td>
                 <td className="border p-1 text-right">
-                  {/* Gross Wt Total not tracked in state, but Regular has it. Calculated on fly for now or unused */}
-                  -
+                  {items.reduce((sum, item) => sum + (parseFloat(item.grossWeight) || 0), 0).toFixed(3)}
                 </td>
                 <td className="border p-1 text-right">
-                  -
+                  {items.reduce((sum, item) => sum + (parseFloat(item.stoneWeight) || 0), 0).toFixed(3)}
                 </td>
                 <td className="border p-1 bg-gray-100">
                   {totals.totalNetWeight}

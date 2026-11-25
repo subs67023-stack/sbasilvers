@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../utils/api';
+import { formatDate } from '../../utils/dateUtils';
 
 export default function WholesaleStockManager() {
   const [activeTab, setActiveTab] = useState('list'); // list, add, producer
@@ -121,8 +122,10 @@ function ProductList({ products, loading, refresh }) {
             <th className="p-3">Date</th>
             <th className="p-3">Producer</th>
             <th className="p-3">Item Name</th>
+            <th className="p-3 text-center">Stamp</th>
             <th className="p-3 text-center">Pcs</th>
             <th className="p-3 text-right">Gross Wt</th>
+            <th className="p-3 text-right">Stone Wt</th>
             <th className="p-3 text-right">Net Wt</th>
             <th className="p-3 text-right">Touch</th>
             <th className="p-3 text-right">Pure Silver</th>
@@ -131,16 +134,18 @@ function ProductList({ products, loading, refresh }) {
         </thead>
         <tbody className="divide-y">
           {products.map(p => {
-            const pure = (parseFloat(p.netWeight) * parseFloat(p.touch) / 100).toFixed(3);
+            const pure = (parseFloat(p.netWeight || 0) * parseFloat(p.touch || 0) / 100).toFixed(3);
             return (
               <tr key={p.id} className="hover:bg-gray-50">
-                <td className="p-3 text-xs text-gray-500">{new Date(p.createdAt).toLocaleDateString()}</td>
+                <td className="p-3 text-xs text-gray-500">{formatDate(p.createdAt)}</td>
                 <td className="p-3 font-medium text-gray-800">{p.producer?.name || '-'}</td>
-                <td className="p-3">{p.name}</td>
+                <td className="p-3 font-medium">{p.name}</td>
+                <td className="p-3 text-center font-medium text-gray-700">{p.stamp || '-'}</td>
                 <td className="p-3 text-center">{p.pieces}</td>
-                <td className="p-3 text-right">{parseFloat(p.grossWeight).toFixed(3)}</td>
-                <td className="p-3 text-right font-bold">{parseFloat(p.netWeight).toFixed(3)}</td>
-                <td className="p-3 text-right">{parseFloat(p.touch).toFixed(2)}</td>
+                <td className="p-3 text-right">{parseFloat(p.grossWeight || 0).toFixed(3)}</td>
+                <td className="p-3 text-right">{parseFloat(p.stoneWeight || 0).toFixed(3)}</td>
+                <td className="p-3 text-right font-bold">{parseFloat(p.netWeight || 0).toFixed(3)}</td>
+                <td className="p-3 text-right">{parseFloat(p.touch || 0).toFixed(2)}</td>
                 <td className="p-3 text-right text-blue-600">{pure}</td>
                 <td className="p-3 text-center">
                   <button onClick={() => handleDelete(p.id)} className="text-red-500 hover:text-red-700 text-xs">🗑️</button>
@@ -149,7 +154,7 @@ function ProductList({ products, loading, refresh }) {
             );
           })}
           {products.length === 0 && (
-            <tr><td colSpan={9} className="p-4 text-center text-gray-400">No stock found.</td></tr>
+            <tr><td colSpan={11} className="p-4 text-center text-gray-400">No stock found.</td></tr>
           )}
         </tbody>
       </table>
@@ -167,9 +172,10 @@ function AddProductForm({ producers, onAdd }) {
   const [items, setItems] = useState([
     {
       name: '',
+      stamp: '92.5',
       pieces: '',
       grossWeight: '',
-      perPieceWeight: '',
+      stoneWeight: '',
       netWeight: 0,
       touch: '92.50',
       pureSilver: 0
@@ -182,11 +188,11 @@ function AddProductForm({ producers, onAdd }) {
 
     const pcs = parseFloat(updated[index].pieces) || 0;
     const gross = parseFloat(updated[index].grossWeight) || 0;
-    const ppWt = parseFloat(updated[index].perPieceWeight) || 0;
+    const stone = parseFloat(updated[index].stoneWeight) || 0;
     const touch = parseFloat(updated[index].touch) || 0;
 
-    const deduction = pcs * ppWt;
-    const net = Math.max(0, gross - deduction);
+    // Stone weight taken once for the item
+    const net = Math.max(0, gross - stone);
     const pure = (net * touch) / 100;
 
     updated[index].netWeight = parseFloat(net.toFixed(3));
@@ -200,9 +206,10 @@ function AddProductForm({ producers, onAdd }) {
       ...items,
       {
         name: '',
+        stamp: '92.5',
         pieces: '',
         grossWeight: '',
-        perPieceWeight: '',
+        stoneWeight: '',
         netWeight: 0,
         touch: '92.50',
         pureSilver: 0
@@ -221,10 +228,11 @@ function AddProductForm({ producers, onAdd }) {
     (acc, item) => ({
       pieces: acc.pieces + (parseInt(item.pieces) || 0),
       grossWeight: acc.grossWeight + (parseFloat(item.grossWeight) || 0),
+      stoneWeight: acc.stoneWeight + (parseFloat(item.stoneWeight) || 0),
       netWeight: acc.netWeight + (parseFloat(item.netWeight) || 0),
       pureSilver: acc.pureSilver + (parseFloat(item.pureSilver) || 0)
     }),
-    { pieces: 0, grossWeight: 0, netWeight: 0, pureSilver: 0 }
+    { pieces: 0, grossWeight: 0, stoneWeight: 0, netWeight: 0, pureSilver: 0 }
   );
 
   const handleSubmit = async (e) => {
@@ -261,14 +269,20 @@ function AddProductForm({ producers, onAdd }) {
         producerId: producerData.producerId,
         newProducerName: producerData.newProducerName,
         newProducerPhone: producerData.newProducerPhone,
-        items: items.map(it => ({
-          name: it.name,
-          pieces: parseInt(it.pieces),
-          grossWeight: parseFloat(it.grossWeight),
-          perPieceWeight: parseFloat(it.perPieceWeight || 0),
-          netWeight: parseFloat(it.netWeight),
-          touch: parseFloat(it.touch || 0)
-        }))
+        items: items.map(it => {
+          const pcs = parseInt(it.pieces);
+          const stone = parseFloat(it.stoneWeight || 0);
+          return {
+            name: it.name,
+            stamp: it.stamp && it.stamp.trim() ? it.stamp.trim() : '92.5',
+            pieces: pcs,
+            grossWeight: parseFloat(it.grossWeight),
+            stoneWeight: stone,
+            perPieceWeight: pcs > 0 ? parseFloat((stone / pcs).toFixed(3)) : 0,
+            netWeight: parseFloat(it.netWeight),
+            touch: parseFloat(it.touch || 0)
+          };
+        })
       };
 
       const res = await api.post('/billing/wholesale-products', payload);
@@ -279,9 +293,10 @@ function AddProductForm({ producers, onAdd }) {
         setItems([
           {
             name: '',
+            stamp: '92.5',
             pieces: '',
             grossWeight: '',
-            perPieceWeight: '',
+            stoneWeight: '',
             netWeight: 0,
             touch: '92.50',
             pureSilver: 0
@@ -368,10 +383,11 @@ function AddProductForm({ producers, onAdd }) {
               <thead className="bg-gray-50 text-gray-700 font-semibold border-b text-xs uppercase">
                 <tr>
                   <th className="p-2.5 w-10 text-center">#</th>
-                  <th className="p-2.5 min-w-[180px] text-left">Item Name *</th>
+                  <th className="p-2.5 min-w-[160px] text-left">Item Name *</th>
+                  <th className="p-2.5 w-20 text-center">Stamp</th>
                   <th className="p-2.5 w-24 text-center">Pcs *</th>
                   <th className="p-2.5 w-28 text-center">Gross Wt (g) *</th>
-                  <th className="p-2.5 w-28 text-center">Per Pc Wt (-) (g)</th>
+                  <th className="p-2.5 w-28 text-center">Stone Wt (g)</th>
                   <th className="p-2.5 w-28 text-center bg-gray-100">Net Wt (Auto)</th>
                   <th className="p-2.5 w-24 text-center">Touch %</th>
                   <th className="p-2.5 w-28 text-center bg-gray-100">Pure Silver (g)</th>
@@ -392,6 +408,15 @@ function AddProductForm({ producers, onAdd }) {
                         value={item.name}
                         onChange={e => handleItemChange(index, 'name', e.target.value)}
                         required
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        placeholder="92.5"
+                        className="w-full border rounded-lg p-2 text-center text-sm font-semibold text-gray-700"
+                        value={item.stamp}
+                        onChange={e => handleItemChange(index, 'stamp', e.target.value)}
                       />
                     </td>
                     <td className="p-2">
@@ -425,8 +450,8 @@ function AddProductForm({ producers, onAdd }) {
                         min="0"
                         className="w-full border rounded-lg p-2 text-center text-sm"
                         placeholder="0.000"
-                        value={item.perPieceWeight}
-                        onChange={e => handleItemChange(index, 'perPieceWeight', e.target.value)}
+                        value={item.stoneWeight}
+                        onChange={e => handleItemChange(index, 'stoneWeight', e.target.value)}
                       />
                     </td>
                     <td className="p-2 bg-gray-50 text-center font-bold text-gray-900">
@@ -466,7 +491,7 @@ function AddProductForm({ producers, onAdd }) {
               {/* SUMMARY TOTAL ROW */}
               <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-300 text-gray-800 text-xs">
                 <tr>
-                  <td colSpan={2} className="p-2.5 text-right uppercase">
+                  <td colSpan={3} className="p-2.5 text-right uppercase">
                     TOTAL ({items.length} Item{items.length > 1 ? 's' : ''}):
                   </td>
                   <td className="p-2.5 text-center text-blue-700">
@@ -475,8 +500,8 @@ function AddProductForm({ producers, onAdd }) {
                   <td className="p-2.5 text-center">
                     {totals.grossWeight.toFixed(3)} g
                   </td>
-                  <td className="p-2.5 text-center text-gray-400">
-                    -
+                  <td className="p-2.5 text-center text-gray-700">
+                    {totals.stoneWeight.toFixed(3)} g
                   </td>
                   <td className="p-2.5 bg-gray-200 text-center text-green-700">
                     {totals.netWeight.toFixed(3)} g
