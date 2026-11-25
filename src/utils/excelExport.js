@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { formatDate } from './dateUtils';
 
 export const exportToExcel = (data, filename = 'export.xlsx', sheetName = 'Sheet1') => {
   try {
@@ -36,7 +37,7 @@ export const exportCustomersToExcel = (customers) => {
 export const exportSalesToExcel = (sales) => {
   const data = sales.map(sale => ({
     'Voucher Number': sale.voucherNumber,
-    'Date': new Date(sale.saleDate).toLocaleDateString('en-GB'),
+    'Date': formatDate(sale.saleDate),
     'Customer': sale.customer?.name || '-',
     'Type': sale.billingType.toUpperCase(),
     'Net Weight (g)': parseFloat(sale.totalNetWeight).toFixed(3),

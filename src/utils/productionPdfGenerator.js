@@ -1,67 +1,69 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { formatDate } from './dateUtils';
 
 /**
  * Generate Production Billing PDF
- * Based on your reference image format
+ * Based on your reference image format (Compact & Moved Up Header)
  */
 export const generateProductionPDF = (saleData) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  let yPos = margin;
+  const margin = 10;
+  let yPos = 7;
 
-  // ========== HEADER SECTION ==========
+  // ========== HEADER SECTION (Compact & Moved Up) ==========
   
   // Add logo if available
   try {
-    const logo = '/SBA2.jpg'; // Your logo path
-    doc.addImage(logo, 'JPEG', margin, yPos, 30, 30);
+    const logo = '/SBA2.jpg';
+    doc.addImage(logo, 'JPEG', margin, yPos, 20, 13);
   } catch (error) {
-    console.log('Logo not found, skipping...');
+    // console.log('Logo not found, skipping...');
   }
 
   // Company Name (Center)
-  doc.setFontSize(18);
+  doc.setFontSize(10.5);
   doc.setFont('helvetica', 'bold');
-  doc.text('|| SHREE DHULUBA PRASAN ||', pageWidth / 2, yPos + 10, { align: 'center' });
+  doc.text('|| SHREE DHULUBA PRASAN ||', pageWidth / 2, yPos + 4, { align: 'center' });
   
-  doc.setFontSize(14);
-  doc.text('ESTIMATE', pageWidth / 2, yPos + 18, { align: 'center' });
+  doc.setFontSize(9.5);
+  doc.text('ESTIMATE', pageWidth / 2, yPos + 9, { align: 'center' });
 
-  yPos += 35;
+  yPos += 15;
 
-  // ========== CUSTOMER & VOUCHER DETAILS (TWO COLUMNS) ==========
+  // ========== CUSTOMER & VOUCHER DETAILS (TWO COLUMNS - COMPACT) ==========
   
+  const boxHeight = 16;
   doc.setDrawColor(200);
-  doc.rect(margin, yPos, pageWidth - 2 * margin, 30);
-  doc.line(pageWidth / 2, yPos, pageWidth / 2, yPos + 30);
+  doc.rect(margin, yPos, pageWidth - 2 * margin, boxHeight);
+  doc.line(pageWidth / 2, yPos, pageWidth / 2, yPos + boxHeight);
 
   // Left Column - Customer Details
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.setFont('helvetica', 'bold');
-  doc.text(`${saleData.customer.name}`, margin + 3, yPos + 6);
+  doc.text(`${saleData.customer.name}`, margin + 3, yPos + 5);
   
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   if (saleData.customer.address) {
-    const addressLines = doc.splitTextToSize(saleData.customer.address, 80);
-    doc.text(addressLines, margin + 3, yPos + 12);
+    const addressLines = doc.splitTextToSize(saleData.customer.address, 75);
+    doc.text(addressLines, margin + 3, yPos + 10);
   }
 
   // Right Column - Voucher Details
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`Bill No.:`, pageWidth / 2 + 3, yPos + 6);
-  doc.text(`Date:`, pageWidth / 2 + 3, yPos + 12);
+  doc.setFontSize(8.5);
+  doc.text(`Bill No.:`, pageWidth / 2 + 3, yPos + 5);
+  doc.text(`Date:`, pageWidth / 2 + 3, yPos + 10);
   
   doc.setFont('helvetica', 'normal');
-  doc.text(saleData.voucherNo, pageWidth / 2 + 25, yPos + 6);
-  doc.text(new Date(saleData.date).toLocaleDateString('en-IN'), pageWidth / 2 + 25, yPos + 12);
+  doc.text(String(saleData.voucherNo || '-'), pageWidth / 2 + 20, yPos + 5);
+  doc.text(formatDate(saleData.date), pageWidth / 2 + 20, yPos + 10);
 
-  yPos += 35;
+  yPos += boxHeight + 3;
 
   // ========== ITEMS TABLE ==========
   
@@ -241,48 +243,47 @@ export const generateCustomerLedgerPDF = (customerData) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 15;
-  let yPos = margin;
+  const margin = 10;
+  let yPos = 8;
 
-  // Header
-  doc.setFontSize(16);
+  // Header (Compact & Moved Up)
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Customer Ledger', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 10;
+  doc.text('Customer Ledger', pageWidth / 2, yPos + 3, { align: 'center' });
+  yPos += 8;
 
   // Customer Info
-  doc.setFontSize(11);
+  doc.setFontSize(9.5);
   doc.text(`Customer: ${customerData.name}`, margin, yPos);
-  yPos += 7;
   
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  if (customerData.phone) {
-    doc.text(`Phone: ${customerData.phone}`, margin, yPos);
-    yPos += 5;
-  }
-  if (customerData.address) {
-    doc.text(`Address: ${customerData.address}`, margin, yPos);
-    yPos += 5;
+  let custDetails = [];
+  if (customerData.phone) custDetails.push(`Phone: ${customerData.phone}`);
+  if (customerData.address) custDetails.push(`Address: ${customerData.address}`);
+  if (custDetails.length > 0) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(custDetails.join(' | '), margin, yPos + 4.5);
+    yPos += 4.5;
   }
 
-  yPos += 5;
+  yPos += 3;
 
   // Balance Summary
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
   doc.setFillColor(255, 243, 205);
-  doc.rect(margin, yPos, pageWidth - 2 * margin, 15, 'F');
+  doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
   
-  doc.text(`Total Balance Silver: ${Math.round(parseFloat(customerData.balanceSilver))} gm`, margin + 5, yPos + 6);
-  doc.text(`Total Balance Amount: ₹${parseFloat(customerData.balanceAmount).toFixed(2)}`, margin + 5, yPos + 12);
+  doc.text(`Total Balance Silver: ${Math.round(parseFloat(customerData.balanceSilver))} gm`, margin + 4, yPos + 6.5);
+  doc.text(`Total Balance Amount: ₹${parseFloat(customerData.balanceAmount).toFixed(2)}`, margin + 80, yPos + 6.5);
 
-  yPos += 20;
+  yPos += 13;
 
   // Sales Table
   if (customerData.sales && customerData.sales.length > 0) {
     const tableData = customerData.sales.map(sale => [
       sale.voucherNo,
-      new Date(sale.date).toLocaleDateString('en-IN'),
+      formatDate(sale.date),
       Math.round(parseFloat(sale.totalSilver)).toString(),
       `₹${parseFloat(sale.totalLaborAmount).toFixed(2)}`,
       Math.round(parseFloat(sale.pendingSilver || 0)).toString(),

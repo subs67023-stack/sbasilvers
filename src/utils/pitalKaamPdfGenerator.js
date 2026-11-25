@@ -1,10 +1,12 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { numberToWords } from './numberToWords';
+import { formatDate } from './dateUtils';
 
 /**
  * Generate Kharedi (Purchase) Voucher PDF
  * Notice: DOES NOT include "Type" anywhere on the PDF!
+ * Compact Header & Moved Up
  */
 export const generateKharediPDF = (entry) => {
   try {
@@ -15,58 +17,58 @@ export const generateKharediPDF = (entry) => {
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = 12;
+    let yPos = 6;
 
     // Header Logo (if present)
     try {
-      doc.addImage('/SBA2.jpg', 'JPEG', 10, yPos, 20, 16);
+      doc.addImage('/SBA2.jpg', 'JPEG', 8, yPos, 16, 12);
     } catch (e) {
       // ignore
     }
 
-    // Top Title
+    // Top Title (Compact)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPos + 5, { align: 'center' });
+    doc.setFontSize(10.5);
+    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPos + 3.5, { align: 'center' });
 
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setTextColor(180, 83, 9); // Amber/Brass
-    doc.text('PITAL KAAM - KHAREDI VOUCHER', pageWidth / 2, yPos + 11, { align: 'center' });
+    doc.text('PITAL KAAM - KHAREDI VOUCHER', pageWidth / 2, yPos + 8, { align: 'center' });
 
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100);
-    doc.text('Brass Raw Material Purchase Receipt', pageWidth / 2, yPos + 16, { align: 'center' });
+    doc.text('Brass Raw Material Purchase Receipt', pageWidth / 2, yPos + 11.5, { align: 'center' });
 
-    yPos += 22;
+    yPos += 14;
 
     // Party & Voucher Box (STRICTLY NO "Type" field)
+    const boxH = 12;
     doc.setDrawColor(210, 215, 220);
     doc.setFillColor(249, 250, 251);
-    doc.roundedRect(10, yPos, pageWidth - 20, 16, 2, 2, 'FD');
+    doc.roundedRect(8, yPos, pageWidth - 16, boxH, 1.5, 1.5, 'FD');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.5);
     doc.setTextColor(30);
 
     // Left Column
-    doc.text('Voucher No:', 14, yPos + 6);
+    doc.text('Voucher No:', 12, yPos + 4.5);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${entry.billNo || '-'}`, 36, yPos + 6);
+    doc.text(`${entry.billNo || '-'}`, 32, yPos + 4.5);
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Party Name:', 14, yPos + 12);
+    doc.text('Party Name:', 12, yPos + 9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${entry.name || '-'}`, 36, yPos + 12);
+    doc.text(`${entry.name || '-'}`, 32, yPos + 9);
 
     // Right Column (Date only, NO type!)
     doc.setFont('helvetica', 'bold');
-    doc.text('Date:', pageWidth - 42, yPos + 9);
+    doc.text('Date:', pageWidth - 38, yPos + 6.5);
     doc.setFont('helvetica', 'normal');
-    const dateStr = entry.date ? new Date(entry.date).toLocaleDateString('en-GB') : '-';
-    doc.text(`${dateStr}`, pageWidth - 32, yPos + 9);
+    doc.text(`${formatDate(entry.date)}`, pageWidth - 28, yPos + 6.5);
 
-    yPos += 20;
+    yPos += boxH + 3;
 
     // Table
     const kg = parseFloat(entry.kg || 0);
@@ -165,58 +167,58 @@ export const generateVeekhariPDF = (entry) => {
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = 12;
+    let yPos = 6;
 
     // Header Logo (if present)
     try {
-      doc.addImage('/SBA2.jpg', 'JPEG', 10, yPos, 20, 16);
+      doc.addImage('/SBA2.jpg', 'JPEG', 8, yPos, 16, 12);
     } catch (e) {
       // ignore
     }
 
-    // Top Title
+    // Top Title (Compact)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPos + 5, { align: 'center' });
+    doc.setFontSize(10.5);
+    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPos + 3.5, { align: 'center' });
 
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setTextColor(16, 185, 129); // Emerald Green
-    doc.text('PITAL KAAM - VEEKHARI ESTIMATE / BILL', pageWidth / 2, yPos + 11, { align: 'center' });
+    doc.text('PITAL KAAM - VEEKHARI ESTIMATE / BILL', pageWidth / 2, yPos + 8, { align: 'center' });
 
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100);
-    doc.text('Brass Material Sales Voucher', pageWidth / 2, yPos + 16, { align: 'center' });
+    doc.text('Brass Material Sales Voucher', pageWidth / 2, yPos + 11.5, { align: 'center' });
 
-    yPos += 22;
+    yPos += 14;
 
     // Customer & Bill Box (STRICTLY NO "Type" field)
+    const boxH = 12;
     doc.setDrawColor(210, 215, 220);
     doc.setFillColor(249, 250, 251);
-    doc.roundedRect(10, yPos, pageWidth - 20, 16, 2, 2, 'FD');
+    doc.roundedRect(8, yPos, pageWidth - 16, boxH, 1.5, 1.5, 'FD');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.5);
     doc.setTextColor(30);
 
     // Left Column
-    doc.text('Bill No:', 14, yPos + 6);
+    doc.text('Bill No:', 12, yPos + 4.5);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${entry.billNo || '-'}`, 32, yPos + 6);
+    doc.text(`${entry.billNo || '-'}`, 30, yPos + 4.5);
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Customer:', 14, yPos + 12);
+    doc.text('Customer:', 12, yPos + 9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${entry.name || '-'}`, 32, yPos + 12);
+    doc.text(`${entry.name || '-'}`, 30, yPos + 9);
 
     // Right Column (Date only, NO type!)
     doc.setFont('helvetica', 'bold');
-    doc.text('Date:', pageWidth - 42, yPos + 9);
+    doc.text('Date:', pageWidth - 38, yPos + 6.5);
     doc.setFont('helvetica', 'normal');
-    const dateStr = entry.date ? new Date(entry.date).toLocaleDateString('en-GB') : '-';
-    doc.text(`${dateStr}`, pageWidth - 32, yPos + 9);
+    doc.text(`${formatDate(entry.date)}`, pageWidth - 28, yPos + 6.5);
 
-    yPos += 20;
+    yPos += boxH + 3;
 
     // Table (ONLY weight, rate, total. NO taken rate, NO profit!)
     const kg = parseFloat(entry.kg || 0);
@@ -316,35 +318,35 @@ export const generateCustomerLedgerPDF = (customerName, customerType = 'kharedi'
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = 14;
+    let yPos = 8;
 
-    // Header
+    // Header (Compact & Moved Up)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPos + 5, { align: 'center' });
-
     doc.setFontSize(11);
+    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPos + 4, { align: 'center' });
+
+    doc.setFontSize(9.5);
     doc.setTextColor(isKharedi ? 180 : 16, isKharedi ? 83 : 185, isKharedi ? 9 : 129);
     doc.text(
       isKharedi ? 'PITAL KAAM - KHAREDI PARTY STATEMENT' : 'PITAL KAAM - VEEKHARI CUSTOMER STATEMENT',
       pageWidth / 2,
-      yPos + 12,
+      yPos + 9,
       { align: 'center' }
     );
 
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100);
-    doc.text(`${isKharedi ? 'Party Name' : 'Customer Name'}: ${customerName}`, pageWidth / 2, yPos + 17, { align: 'center' });
+    doc.text(`${isKharedi ? 'Party Name' : 'Customer Name'}: ${customerName}`, pageWidth / 2, yPos + 13.5, { align: 'center' });
 
-    yPos += 24;
+    yPos += 17;
 
     // Summary Box
     doc.setDrawColor(220);
     doc.setFillColor(248, 250, 252);
-    doc.roundedRect(14, yPos, pageWidth - 28, 16, 2, 2, 'FD');
+    doc.roundedRect(12, yPos, pageWidth - 24, 12, 1.5, 1.5, 'FD');
 
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.5);
     doc.setTextColor(30);
 
     const totalKg = summary.totalKg || 0;
@@ -352,26 +354,26 @@ export const generateCustomerLedgerPDF = (customerName, customerType = 'kharedi'
     const avgRate = summary.avgRate || (totalKg > 0 ? totalAmount / totalKg : 0);
 
     doc.setFont('helvetica', 'bold');
-    doc.text(`Total Weight:`, 18, yPos + 7);
+    doc.text(`Total Weight:`, 16, yPos + 7);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${parseFloat(totalKg).toFixed(3)} kg`, 42, yPos + 7);
+    doc.text(`${parseFloat(totalKg).toFixed(3)} kg`, 38, yPos + 7);
 
     doc.setFont('helvetica', 'bold');
-    doc.text(`Total Amount:`, 80, yPos + 7);
+    doc.text(`Total Amount:`, 75, yPos + 7);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Rs. ${parseFloat(totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 105, yPos + 7);
+    doc.text(`Rs. ${parseFloat(totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 98, yPos + 7);
 
     doc.setFont('helvetica', 'bold');
     doc.text(`Average Rate:`, pageWidth - 60, yPos + 7);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Rs. ${parseFloat(avgRate).toFixed(2)} / kg`, pageWidth - 35, yPos + 7);
+    doc.text(`Rs. ${parseFloat(avgRate).toFixed(2)} / kg`, pageWidth - 38, yPos + 7);
 
-    yPos += 22;
+    yPos += 15;
 
     // Table (STRICTLY NO "Type" column!)
     const rows = entries.map((e, idx) => [
       idx + 1,
-      e.date ? new Date(e.date).toLocaleDateString('en-GB') : '-',
+      formatDate(e.date),
       e.billNo || '-',
       `${parseFloat(e.kg).toFixed(3)} kg`,
       `Rs. ${parseFloat(e.ratePerKg).toFixed(2)}`,

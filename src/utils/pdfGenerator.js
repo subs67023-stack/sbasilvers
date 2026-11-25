@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatDate } from './dateUtils';
 
 export const generatePDF = (sale) => {
   try {
@@ -11,50 +12,49 @@ export const generatePDF = (sale) => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 15;
+    let yPosition = 7;
 
-    // ===== HEADER SECTION =====
+    // ===== HEADER SECTION (Compact & Moved Up) =====
     const logoPath = '/SBA2.jpg';
     try {
-      doc.addImage(logoPath, 'JPEG', 10, yPosition, 30, 20);
+      doc.addImage(logoPath, 'JPEG', 10, yPosition, 20, 13);
     } catch (error) {
       // console.log('Logo not found');
     }
 
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setFont(undefined, 'bold');
-    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPosition + 8, { align: 'center' });
+    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPosition + 4, { align: 'center' });
 
-    doc.setFontSize(12);
-    doc.text('INVOICE', pageWidth / 2, yPosition + 14, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text('INVOICE', pageWidth / 2, yPosition + 9, { align: 'center' });
 
-    doc.setFontSize(10);
+    doc.setFontSize(8.5);
     doc.setFont(undefined, 'normal');
 
+    yPosition += 15;
 
-    yPosition += 28;
-
-    // Customer Details
+    // Customer Details (Left) & Voucher / Date (Right)
     doc.setFont(undefined, 'bold');
-    doc.text('Customer:', 15, yPosition);
+    doc.text('Customer:', 12, yPosition);
     doc.setFont(undefined, 'normal');
-    doc.text(sale.customer?.name || 'N/A', 35, yPosition);
+    doc.text(sale.customer?.name || 'N/A', 30, yPosition);
 
     // Voucher & Date (Right Aligned)
-    doc.text(`Voucher: ${sale.voucherNumber}`, pageWidth - 15, yPosition + 8, { align: 'right' });
-    doc.text(`Date: ${new Date(sale.saleDate).toLocaleDateString('en-GB')}`, pageWidth - 15, yPosition + 13, { align: 'right' });
+    doc.text(`Voucher: ${sale.voucherNumber}`, pageWidth - 12, yPosition, { align: 'right' });
+    doc.text(`Date: ${formatDate(sale.saleDate)}`, pageWidth - 12, yPosition + 4.5, { align: 'right' });
 
-    yPosition += 5;
+    yPosition += 4.5;
     if (sale.customer?.address) {
-      const addressLines = doc.splitTextToSize(sale.customer.address, 100); // Limit width
-      doc.text(addressLines, 35, yPosition);
-      yPosition += (addressLines.length * 5);
+      const addressLines = doc.splitTextToSize(sale.customer.address, 95);
+      doc.text(addressLines, 30, yPosition);
+      yPosition += (addressLines.length * 4);
     }
     if (sale.customer?.phone) {
-      doc.text(`Phone: ${sale.customer.phone}`, 35, yPosition);
-      yPosition += 5;
+      doc.text(`Phone: ${sale.customer.phone}`, 30, yPosition);
+      yPosition += 4;
     }
-    yPosition += 5; // Spacing before table
+    yPosition += 2.5; // Spacing before table
 
     // ===== TABLE DATA PREPARATION =====
 

@@ -1,25 +1,30 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { formatDate } from './dateUtils';
 
 export const generateBillPDF = (sale, customer) => {
   const doc = new jsPDF();
 
-  // Company header
+  // Company header (Compact & Moved Up)
   doc.setFillColor(25, 47, 89); // Navy blue
-  doc.rect(0, 0, 210, 30, 'F');
+  doc.rect(0, 0, 210, 16, 'F');
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
-  doc.text('BILLING', 105, 15, { align: 'center' });
+  doc.setFontSize(13);
+  doc.setFont(undefined, 'bold');
+  doc.text('BILLING', 105, 10.5, { align: 'center' });
   
-  doc.setFontSize(10);
-  doc.text(`Date: ${new Date(sale.saleDate).toLocaleDateString('en-GB')}`, 170, 20);
+  doc.setFontSize(8.5);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Date: ${formatDate(sale.saleDate)}`, 195, 10.5, { align: 'right' });
 
-  // Customer info
+  // Customer info (Compact)
   doc.setTextColor(0, 0, 0);
-  doc.setFontSize(12);
-  doc.text(`Customer: ${customer.name}`, 14, 40);
-  doc.text(`Billing Date: ${new Date(sale.saleDate).toLocaleDateString('en-GB')}`, 150, 40);
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text(`Customer: ${customer.name}`, 14, 22);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Billing Date: ${formatDate(sale.saleDate)}`, 195, 22, { align: 'right' });
 
   // Table data
   const tableData = sale.items.map(item => [
@@ -36,7 +41,7 @@ export const generateBillPDF = (sale, customer) => {
 
   // Add table
   doc.autoTable({
-    startY: 50,
+    startY: 27,
     head: [['Product', 'Net Wt', 'Price', 'Touch', 'Wastage', 'Hi/Hob', 'Labour', 'Silver', 'Amount']],
     body: tableData,
     theme: 'grid',

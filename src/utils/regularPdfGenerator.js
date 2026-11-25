@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatDate } from './dateUtils';
 
 export const generateRegularPDF = sale => {
   try {
@@ -11,49 +12,49 @@ export const generateRegularPDF = sale => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 15;
+    let yPosition = 7;
 
-    // ===== HEADER SECTION =====
+    // ===== HEADER SECTION (Compact & Moved Up) =====
     const logoPath = '/SBA2.jpg';
     try {
-      doc.addImage(logoPath, 'JPEG', 10, yPosition, 30, 20);
+      doc.addImage(logoPath, 'JPEG', 10, yPosition, 20, 13);
     } catch (error) {
       // console.log('Logo not found');
     }
 
-    doc.setFontSize(16);
+    doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
-    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPosition + 8, { align: 'center' });
+    doc.text('|| Shree Dhuluba Prasan ||', pageWidth / 2, yPosition + 4, { align: 'center' });
 
-    doc.setFontSize(14);
-    doc.text('REGULAR BILLING INVOICE', pageWidth / 2, yPosition + 14, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text('REGULAR BILLING INVOICE', pageWidth / 2, yPosition + 9, { align: 'center' });
 
-    doc.setFontSize(10);
+    doc.setFontSize(8.5);
     doc.setFont(undefined, 'normal');
+
+    yPosition += 15;
+
+    // Customer Details (Left) & Voucher / Date (Right)
+    doc.setFont(undefined, 'bold');
+    doc.text('Customer:', 12, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(sale.customer?.name || 'N/A', 30, yPosition);
 
     // Voucher & Date (Right Aligned)
-    doc.text(`Voucher: ${sale.voucherNumber}`, pageWidth - 15, yPosition + 8, { align: 'right' });
-    doc.text(`Date: ${new Date(sale.saleDate).toLocaleDateString('en-GB')}`, pageWidth - 15, yPosition + 13, { align: 'right' });
+    doc.text(`Voucher: ${sale.voucherNumber}`, pageWidth - 12, yPosition, { align: 'right' });
+    doc.text(`Date: ${formatDate(sale.saleDate)}`, pageWidth - 12, yPosition + 4.5, { align: 'right' });
 
-    yPosition += 28;
-
-    // Customer Details
-    doc.setFont(undefined, 'bold');
-    doc.text('Customer:', 15, yPosition);
-    doc.setFont(undefined, 'normal');
-    doc.text(sale.customer?.name || 'N/A', 35, yPosition);
-
-    yPosition += 5;
+    yPosition += 4.5;
     if (sale.customer?.address) {
-      const addressLines = doc.splitTextToSize(sale.customer.address, 100); // Limit width
-      doc.text(addressLines, 35, yPosition);
-      yPosition += (addressLines.length * 5);
+      const addressLines = doc.splitTextToSize(sale.customer.address, 95);
+      doc.text(addressLines, 30, yPosition);
+      yPosition += (addressLines.length * 4);
     }
     if (sale.customer?.phone) {
-      doc.text(`Phone: ${sale.customer.phone}`, 35, yPosition);
-      yPosition += 5;
+      doc.text(`Phone: ${sale.customer.phone}`, 30, yPosition);
+      yPosition += 4;
     }
-    yPosition += 5; // Spacing before table
+    yPosition += 2.5; // Spacing before table
 
     // ===== TABLE DATA PREPARATION =====
 
@@ -254,36 +255,44 @@ export const generateRegularPDF = sale => {
 export const generateLedgerPDF = (ledgerData, customer) => {
   try {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    // HEADER
-    doc.setFontSize(18);
+    // HEADER (Compact & Moved Up)
+    let yPos = 8;
+    doc.setFontSize(13);
+    doc.setFont(undefined, 'bold');
     doc.setTextColor(41, 128, 185);
-    doc.text('CUSTOMER LEDGER STATEMENT', 14, 20);
+    doc.text('CUSTOMER LEDGER STATEMENT', 14, yPos + 4);
 
-    doc.setFontSize(10);
+    doc.setFontSize(8.5);
+    doc.setFont(undefined, 'normal');
     doc.setTextColor(100);
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, 14, 28);
+    doc.text(`Generated: ${formatDate(new Date())}`, pageWidth - 14, yPos + 4, { align: 'right' });
+
+    yPos += 9;
 
     // Customer Details
-    doc.setFontSize(12);
+    doc.setFontSize(9.5);
     doc.setTextColor(0);
-    doc.text(`Customer: ${customer.name}`, 14, 40);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Customer: ${customer.name}`, 14, yPos);
 
-    let yPos = 46;
-    if (customer.phone) {
-      doc.text(`Phone: ${customer.phone}`, 14, yPos);
-      yPos += 6;
+    doc.setFont(undefined, 'normal');
+    let custInfoRight = [];
+    if (customer.phone) custInfoRight.push(`Phone: ${customer.phone}`);
+    if (customer.address) custInfoRight.push(`Address: ${customer.address}`);
+    if (custInfoRight.length > 0) {
+      doc.text(custInfoRight.join(' | '), 14, yPos + 4.5);
+      yPos += 4.5;
     }
-    if (customer.address) {
-      const addressLines = doc.splitTextToSize(`Address: ${customer.address}`, 180);
-      doc.text(addressLines, 14, yPos);
-    }
+
+    yPos += 4;
 
     const tableBody = [];
 
     // Parse Transactions
     ledgerData.transactions.forEach(txn => {
-      const date = new Date(txn.transactionDate).toLocaleDateString('en-GB');
+      const date = formatDate(txn.transactionDate);
       const type = txn.type.replace(/_/g, ' ').toUpperCase();
       const notes = txn.notes || '-';
 
@@ -319,7 +328,7 @@ export const generateLedgerPDF = (ledgerData, customer) => {
     });
 
     autoTable(doc, {
-      startY: 60,
+      startY: yPos + 2,
       head: [[
         'Date', 'Particulars',
         'Silver Dr', 'Silver Cr', 'Silver Bal',
