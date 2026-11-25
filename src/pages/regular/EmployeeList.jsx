@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import * as XLSX from 'xlsx';
+import { formatDate } from '../../utils/dateUtils';
 
 const EmployeeList = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ const EmployeeList = () => {
     const dataToExport = filteredEmployees.map((emp, index) => ({
       'No': index + 1,
       'Name': emp.name,
-      'Date of Join': new Date(emp.dateOfJoin).toLocaleDateString(),
+      'Date of Join': formatDate(emp.dateOfJoin),
       'Department': emp.department,
       'Phone': emp.phoneNumber || '-',
       'Baki Amount': `₹${parseFloat(emp.bakiAmount).toFixed(2)}`
@@ -240,7 +241,7 @@ const EmployeeList = () => {
                   <tr key={employee.id} className="hover:bg-gray-50">
                     <td className="border p-3">{index + 1}</td>
                     <td className="border p-3 font-medium">{employee.name}</td>
-                    <td className="border p-3">{new Date(employee.dateOfJoin).toLocaleDateString()}</td>
+                    <td className="border p-3">{formatDate(employee.dateOfJoin)}</td>
                     <td className="border p-3 text-right font-semibold">
                       ₹{parseFloat(employee.bakiAmount).toFixed(2)}
                     </td>

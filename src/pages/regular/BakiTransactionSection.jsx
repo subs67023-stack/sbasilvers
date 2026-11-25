@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import * as XLSX from 'xlsx';
+import { formatDate } from '../../utils/dateUtils';
 
 const BakiTransactionSection = () => {
   const [employees, setEmployees] = useState([]);
@@ -113,7 +114,7 @@ const BakiTransactionSection = () => {
   const exportToExcel = () => {
     const dataToExport = filteredTransactions.map((txn, index) => ({
       'No': index + 1,
-      'Date': new Date(txn.date).toLocaleDateString(),
+      'Date': formatDate(txn.date),
       'Employee': txn.employeeName || 'Unknown',
       'Type': txn.type === 'given' ? 'Baki Given' : 'Baki Returned',
       'Amount': `₹${parseFloat(txn.amount).toFixed(2)}`,
@@ -293,7 +294,7 @@ const BakiTransactionSection = () => {
               ) : (
                 filteredTransactions.map((txn) => (
                   <tr key={txn.id} className="hover:bg-gray-50">
-                    <td className="border p-3">{new Date(txn.date).toLocaleDateString()}</td>
+                    <td className="border p-3">{formatDate(txn.date)}</td>
                     <td className="border p-3 font-medium">{txn.employeeName || 'Unknown'}</td>
                     <td className="border p-3 text-center">
                       <span

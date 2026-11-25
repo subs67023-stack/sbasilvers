@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import RegularDashboard from './RegularDashboard';
+import { formatDate } from '../../utils/dateUtils';
 
 const EmployeeLedger = () => {
   const { id } = useParams();
@@ -81,7 +82,7 @@ const exportToPDF = () => {
   doc.setFont(undefined, 'normal');
   doc.text(`Department: ${employee?.department || 'N/A'}`, 14, yPosition);
   yPosition += 5;
-  doc.text(`Date of Join: ${employee ? new Date(employee.dateOfJoin).toLocaleDateString() : 'N/A'}`, 14, yPosition);
+  doc.text(`Date of Join: ${employee ? formatDate(employee.dateOfJoin) : 'N/A'}`, 14, yPosition);
   yPosition += 5;
   doc.setFont(undefined, 'bold');
   doc.setTextColor(220, 38, 38); // Red
@@ -94,8 +95,8 @@ const exportToPDF = () => {
 
   // --- SALARY TABLE ---
   const salaryTableData = salaries.map((salary) => [
-    new Date(salary.fromDate).toLocaleDateString(),
-    new Date(salary.toDate).toLocaleDateString(),
+    formatDate(salary.fromDate),
+    formatDate(salary.toDate),
     parseFloat(salary.daysWorked || 0).toFixed(2),
     parseFloat(salary.pagar).toFixed(2),
     parseFloat(salary.totalPagar).toFixed(2),
@@ -169,7 +170,7 @@ const exportToPDF = () => {
     yPosition += 8;
 
     const bakiTableData = bakiTransactions.map((txn) => [
-      new Date(txn.date).toLocaleDateString(),
+      formatDate(txn.date),
       txn.type === 'given' ? 'Baki Uchal' : 'Baki Jama',
       txn.type === 'given' ? `+${parseFloat(txn.amount).toFixed(2)}` : `-${parseFloat(txn.amount).toFixed(2)}`,
       txn.description || '-'
@@ -228,7 +229,7 @@ const exportToPDF = () => {
             {employee && (
               <div className="text-gray-600 mt-2">
                 <p>Department: {employee.department}</p>
-                <p>Date of Join: {new Date(employee.dateOfJoin).toLocaleDateString()}</p>
+                <p>Date of Join: {formatDate(employee.dateOfJoin)}</p>
                 <p className="font-semibold text-red-600">
                   Current Baki: ₹{parseFloat(employee.bakiAmount).toFixed(2)}
                 </p>
@@ -267,8 +268,8 @@ const exportToPDF = () => {
                 <tbody>
                   {salaries.map((salary) => (
                     <tr key={salary.id} className="hover:bg-gray-50">
-                      <td className="border p-3">{new Date(salary.fromDate).toLocaleDateString()}</td>
-                      <td className="border p-3">{new Date(salary.toDate).toLocaleDateString()}</td>
+                      <td className="border p-3">{formatDate(salary.fromDate)}</td>
+                      <td className="border p-3">{formatDate(salary.toDate)}</td>
                       <td className="border p-3 text-center">{salary.daysWorked}</td>
                       <td className="border p-3 text-right">₹{parseFloat(salary.pagar).toFixed(2)}</td>
                       <td className="border p-3 text-right">₹{parseFloat(salary.totalPagar).toFixed(2)}</td>
@@ -309,7 +310,7 @@ const exportToPDF = () => {
                       <tbody>
                         {bakiTransactions.map((txn) => (
                           <tr key={txn.id} className="hover:bg-gray-50">
-                            <td className="border p-3">{new Date(txn.date).toLocaleDateString()}</td>
+                            <td className="border p-3">{formatDate(txn.date)}</td>
                             <td className="border p-3 text-center">
                               <span
                                 className={`px-3 py-1 rounded-full text-sm font-medium ${
